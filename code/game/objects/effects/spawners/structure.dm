@@ -10,7 +10,7 @@ again.
 
 /obj/effect/spawner/structure/Initialize()
 	. = ..()
-	if(spawn_list?.len)
+	if(spawn_list && spawn_list.len)
 		for(var/I in spawn_list)
 			new I(get_turf(src))
 	return INITIALIZE_HINT_QDEL
@@ -24,6 +24,13 @@ again.
 	name = "window spawner"
 	spawn_list = list(/obj/structure/grille, /obj/structure/window/fulltile)
 	dir = SOUTH
+
+/obj/effect/spawner/structure/window/Initialize()
+	. = ..()
+
+	if (is_station_level(z))
+		var/turf/current_turf = get_turf(src)
+		current_turf.rcd_memory = RCD_MEMORY_WINDOWGRILLE
 
 /obj/effect/spawner/structure/window/hollow
 	name = "hollow window spawner"

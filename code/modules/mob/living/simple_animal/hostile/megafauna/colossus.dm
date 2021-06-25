@@ -77,14 +77,14 @@
 
 /datum/action/innate/megafauna_attack/shotgun
 	name = "Shotgun Fire"
-	icon_icon = 'icons/obj/guns/projectile.dmi'
+	icon_icon = 'icons/obj/guns/ballistic.dmi'
 	button_icon_state = "shotgun"
 	chosen_message = "<span class='colossus'>You are now firing shotgun shots where you aim.</span>"
 	chosen_attack_num = 3
 
 /datum/action/innate/megafauna_attack/alternating_cardinals
 	name = "Alternating Shots"
-	icon_icon = 'icons/obj/guns/projectile.dmi'
+	icon_icon = 'icons/obj/guns/ballistic.dmi'
 	button_icon_state = "pistol"
 	chosen_message = "<span class='colossus'>You are now firing in alternating cardinal directions.</span>"
 	chosen_attack_num = 4
@@ -107,7 +107,7 @@
 
 	if(enrage(target))
 		if(move_to_delay == initial(move_to_delay))
-			visible_message("<span class='colossus'>\"<b>You can't dodge.</b>\"</span>")
+			visible_message(span_colossus("\"<b>You can't dodge.</b>\""))
 		ranged_cooldown = world.time + 30
 		telegraph()
 		dir_shots(GLOB.alldirs)
@@ -150,11 +150,11 @@
 	icon_state = "eva_attack"
 	if(health < maxHealth/3)
 		return double_spiral()
-	visible_message("<span class='colossus'>\"<b>Judgement.</b>\"</span>")
+	visible_message(span_colossus("\"<b>Judgement.</b>\""))
 	return spiral_shoot()
 
 /mob/living/simple_animal/hostile/megafauna/colossus/proc/double_spiral()
-	visible_message("<span class='colossus'>\"<b>Die.</b>\"</span>")
+	visible_message(span_colossus("\"<b>Die.</b>\""))
 
 	SLEEP_CHECK_DEATH(10)
 	INVOKE_ASYNC(src, .proc/spiral_shoot, FALSE)
@@ -225,7 +225,7 @@
 
 
 /mob/living/simple_animal/hostile/megafauna/colossus/devour(mob/living/L)
-	visible_message("<span class='colossus'>[src] disintegrates [L]!</span>")
+	visible_message(span_colossus("[src] disintegrates [L]!"))
 	L.dust()
 
 /obj/effect/temp_visual/at_shield
@@ -272,10 +272,9 @@
 		else
 			SSexplosions.medturf += target
 
-
-
+//There can only ever be one blackbox, and we want to know if there already is one when we spawn
+GLOBAL_DATUM(blackbox, /obj/machinery/smartfridge/black_box)
 //Black Box
-
 /obj/machinery/smartfridge/black_box
 	name = "black box"
 	desc = "A completely indestructible chunk of crystal, rumoured to predate the start of this universe. It looks like you could store things inside it."
@@ -299,17 +298,15 @@
 	if(!istype(O))
 		return FALSE
 	if(blacklist[O])
-		visible_message("<span class='boldwarning'>[src] ripples as it rejects [O]. The device will not accept items that have been removed from it.</span>")
+		visible_message(span_boldwarning("[src] ripples as it rejects [O]. The device will not accept items that have been removed from it."))
 		return FALSE
 	return TRUE
 
 /obj/machinery/smartfridge/black_box/Initialize()
 	. = ..()
-	var/static/obj/machinery/smartfridge/black_box/current
-	if(current && current != src)
-		qdel(src, force=TRUE)
-		return
-	current = src
+	if(GLOB.blackbox != src)
+		return INITIALIZE_HINT_QDEL_FORCE
+	GLOB.blackbox = src
 	ReadMemory()
 
 /obj/machinery/smartfridge/black_box/process()
@@ -354,6 +351,8 @@
 
 /obj/machinery/smartfridge/black_box/Destroy(force = FALSE)
 	if(force)
+		if(GLOB.blackbox == src)
+			GLOB.blackbox = null
 		for(var/thing in src)
 			qdel(thing)
 		return ..()
@@ -429,7 +428,7 @@
 	if(isliving(speaker))
 		ActivationReaction(speaker, ACTIVATE_SPEECH)
 
-/obj/machinery/anomalous_crystal/attack_hand(mob/user)
+/obj/machinery/anomalous_crystal/attack_hand(mob/user, list/modifiers)
 	. = ..()
 	if(.)
 		return
@@ -468,7 +467,8 @@
 /obj/machinery/anomalous_crystal/ex_act()
 	ActivationReaction(null, ACTIVATE_BOMB)
 
-/obj/machinery/anomalous_crystal/honk //Strips and equips you as a clown. I apologize for nothing
+/* SKYRAT EDIT REMOVAL -- Deletes Clowning, you're welcome.
+/obj/machinery/anomalous_crystal/honk //Strips and equips you as a clown. I apologize for nothing 
 	observer_desc = "This crystal strips and equips its targets as clowns."
 	possible_methods = list(ACTIVATE_MOB_BUMP, ACTIVATE_SPEECH)
 	activation_sound = 'sound/items/bikehorn.ogg'
@@ -482,6 +482,7 @@
 		C.equip(H)
 		qdel(C)
 		affected_targets.Add(H)
+SKYRAT EDIT REMOVAL END*/
 
 /obj/machinery/anomalous_crystal/theme_warp //Warps the area you're in to look like a new one
 	observer_desc = "This crystal warps the area around it to a theme."
@@ -502,12 +503,12 @@
 
 	switch(terrain_theme)
 		if("lavaland")//Depressurizes the place... and free cult metal, I guess.
-			NewTerrainFloors = /turf/open/floor/grass/snow/basalt
+			NewTerrainFloors = /turf/open/floor/grass/snow/basalt/safe
 			NewTerrainWalls = /turf/closed/wall/mineral/cult
 			NewFlora = list(/mob/living/simple_animal/hostile/asteroid/goldgrub)
 			florachance = 1
 		if("winter") //Snow terrain is slow to move in and cold! Get the assistants to shovel your driveway.
-			NewTerrainFloors = /turf/open/floor/grass/snow
+			NewTerrainFloors = /turf/open/floor/grass/snow/safe
 			NewTerrainWalls = /turf/closed/wall/mineral/wood
 			NewTerrainChairs = /obj/structure/chair/wood
 			NewTerrainTables = /obj/structure/table/glass
@@ -534,7 +535,7 @@
 				if(isturf(Stuff))
 					var/turf/T = Stuff
 					if((isspaceturf(T) || isfloorturf(T)) && NewTerrainFloors)
-						var/turf/open/O = T.ChangeTurf(NewTerrainFloors, flags = CHANGETURF_INHERIT_AIR)
+						var/turf/open/O = T.ChangeTurf(NewTerrainFloors, flags = CHANGETURF_IGNORE_AIR)
 						if(prob(florachance) && NewFlora.len && !O.is_blocked_turf(TRUE))
 							var/atom/Picked = pick(NewFlora)
 							new Picked(O)
@@ -584,7 +585,7 @@
 				P.yo = -20
 				P.xo = 0
 		P.fire()
-
+/* SKYRAT REMOVAL EDIT -- More generic roundremove/transformation shit
 /obj/machinery/anomalous_crystal/dark_reprise //Revives anyone nearby, but turns them into shadowpeople and renders them uncloneable, so the crystal is your only hope of getting up again if you go down.
 	observer_desc = "When activated, this crystal revives anyone nearby, but turns them into Shadowpeople and makes them unclonable, making the crystal their only hope of getting up again."
 	activation_method = ACTIVATE_TOUCH
@@ -605,6 +606,7 @@
 					H.revive(full_heal = TRUE, admin_revive = FALSE)
 					ADD_TRAIT(H, TRAIT_BADDNA, MAGIC_TRAIT) //Free revives, but significantly limits your options for reviving except via the crystal
 					H.grab_ghost(force = TRUE)
+SKYRAT REMOVAL EDIT END*/
 
 /obj/machinery/anomalous_crystal/helpers //Lets ghost spawn as helpful creatures that can only heal people slightly. Incredibly fragile and they can't converse with humans
 	observer_desc = "This crystal allows ghosts to turn into a fragile creature that can heal people."
@@ -623,7 +625,7 @@
 	if(.)
 		return
 	if(ready_to_deploy)
-		var/be_helper = alert("Become a Lightgeist? (Warning, You can no longer be revived!)",,"Yes","No")
+		var/be_helper = tgui_alert(usr,"Become a Lightgeist? (Warning, You can no longer be revived!)",,list("Yes","No"))
 		if(be_helper == "Yes" && !QDELETED(src) && isobserver(user))
 			var/mob/living/simple_animal/hostile/lightgeist/W = new /mob/living/simple_animal/hostile/lightgeist(get_turf(loc))
 			W.key = user.key
@@ -657,9 +659,7 @@
 	friendly_verb_continuous = "taps"
 	friendly_verb_simple = "tap"
 	density = FALSE
-	is_flying_animal = TRUE
 	pass_flags = PASSTABLE | PASSGRILLE | PASSMOB
-	ventcrawler = VENTCRAWLER_ALWAYS
 	mob_size = MOB_SIZE_TINY
 	gold_core_spawnable = HOSTILE_SPAWN
 	verb_say = "warps"
@@ -681,10 +681,13 @@
 
 /mob/living/simple_animal/hostile/lightgeist/Initialize()
 	. = ..()
+	AddElement(/datum/element/simple_flying)
 	remove_verb(src, /mob/living/verb/pulled)
 	remove_verb(src, /mob/verb/me_verb)
 	var/datum/atom_hud/medsensor = GLOB.huds[DATA_HUD_MEDICAL_ADVANCED]
 	medsensor.add_hud_to(src)
+
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
 
 /mob/living/simple_animal/hostile/lightgeist/AttackingTarget()
 	if(isliving(target) && target != src)
@@ -692,7 +695,7 @@
 		if(L.stat != DEAD)
 			L.heal_overall_damage(melee_damage_upper, melee_damage_upper)
 			new /obj/effect/temp_visual/heal(get_turf(target), "#80F5FF")
-			visible_message("<span class='notice'>[src] mends the wounds of [target].</span>","<span class='notice'>You mend the wounds of [target].</span>")
+			visible_message(span_notice("[src] mends the wounds of [target]."),span_notice("You mend the wounds of [target]."))
 
 /mob/living/simple_animal/hostile/lightgeist/ghost()
 	. = ..()
@@ -744,6 +747,7 @@
 	name = "quantum entanglement stasis warp field"
 	desc = "You can hardly comprehend this thing... which is why you can't see it."
 	icon_state = null //This shouldn't even be visible, so if it DOES show up, at least nobody will notice
+	enable_door_overlay = FALSE //For obvious reasons
 	density = TRUE
 	anchored = TRUE
 	resistance_flags = FIRE_PROOF | ACID_PROOF | INDESTRUCTIBLE
@@ -762,9 +766,9 @@
 		holder_animal = loc
 	START_PROCESSING(SSobj, src)
 
-/obj/structure/closet/stasis/Entered(atom/A)
-	if(isliving(A) && holder_animal)
-		var/mob/living/L = A
+/obj/structure/closet/stasis/Entered(atom/movable/arrived, direction)
+	if(isliving(arrived) && holder_animal)
+		var/mob/living/L = arrived
 		L.notransform = 1
 		ADD_TRAIT(L, TRAIT_MUTE, STASIS_MUTE)
 		L.status_flags |= GODMODE

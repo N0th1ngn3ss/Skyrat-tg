@@ -3,7 +3,6 @@
 $include game_options.txt
 $include dbconfig.txt
 $include comms.txt
-$include antag_rep.txt
 $include resources.txt
 $include skyrat/skyrat_config.txt
 $include interviews.txt
@@ -19,17 +18,26 @@ $include interviews.txt
 ## Server name: This appears at the top of the screen in-game and in the BYOND hub. Uncomment and replace 'tgstation' with the name of your choice.
 # SERVERNAME tgstation
 
-## Server SQL name: This is the name used to identify the server to the SQL DB, distinct from SERVERNAME as it must be at most 32 characters.
-# SERVERSQLNAME tgstation
-
 ## Server tagline: This will appear right below the server's title.
 # SERVERTAGLINE A generic TG-based server
+
+## Discord Link: This is the link to Skyrat's discord server
+# DISCORD_LINK https://discord.gg/hGpZ4Z3
+
+## Server SQL name: This is the name used to identify the server to the SQL DB, distinct from SERVERNAME as it must be at most 32 characters.
+# SERVERSQLNAME tgstation
 
 ## Station name: The name of the station as it is referred to in-game. If commented out, the game will generate a random name instead.
 STATIONNAME Space Station 13
 
 ## Put on byond hub: Uncomment this to put your server on the byond hub.
 #HUB
+
+## Enable server swapping, uncomment to enable reading of server_ips.txt
+SERVER_SWAP_ENABLED
+
+## Once the server population reaches this number, it will be taken off the byond hub. 0 disables.
+#MAX_HUB_POP 100
 
 ## Lobby time: This is the amount of time between rounds that players have to setup their characters and be ready.
 LOBBY_COUNTDOWN 120
@@ -78,6 +86,10 @@ ENABLE_LOCALHOST_RANK
 #USE_EXP_RESTRICTIONS_OTHER
 ## Allows admins to bypass job playtime requirements.
 #USE_EXP_RESTRICTIONS_ADMIN_BYPASS
+## Unhash this to have intern tags automatically added to ID cards for station roles depending on the living hours of the player holding them.
+#USE_LOW_LIVING_HOUR_INTERN
+## If USE_LOW_LIVING_HOUR_INTERN is unhashed, players under this number of living hours have [Intern] added to their ID card. If this isn't set, uses USE_EXP_RESTRICTIONS_HEADS_HOURS instead. If that isn't set, it finally defaults to a hardcoded fallback of 15 hours.
+#USE_LOW_LIVING_HOUR_INTERN_HOURS 50
 
 ## log OOC channel
 LOG_OOC
@@ -154,6 +166,9 @@ LOG_CLONING
 
 ## log shuttle actions
 LOG_SHUTTLE
+
+## Log all timers on timer auto reset
+# LOG_TIMERS_ON_BUCKET_RESET
 
 ##Log camera pictures - Must have picture logging enabled
 PICTURE_LOGGING_CAMERA
@@ -276,7 +291,7 @@ CHECK_RANDOMIZER
 
 ## In-game features
 ##Toggle for having jobs load up from the .txt
-# LOAD_JOBS_FROM_TXT
+LOAD_JOBS_FROM_TXT
 
 ## Uncomment this to forbid admins from possessing the singularity.
 #FORBID_SINGULO_POSSESSION
@@ -403,6 +418,9 @@ AUTOADMIN_RANK Game Master
 ## Uncomment to automatically deadmin players when the game starts.
 #AUTO_DEADMIN_PLAYERS
 
+## Number of game ticks before player-admins will be automatically deadminned.
+#AUTO_DEADMIN_TIMEGATE 600
+
 ## Uncomment to automatically deadmin antagonists when they gain the role.
 #AUTO_DEADMIN_ANTAGONISTS
 
@@ -520,6 +538,11 @@ DEFAULT_VIEW_SQUARE 15x15
 ## Uncomment to enable source whitelisting, a comma-separated list (no spaces) of CentCom sources (sourceName).
 ## If enabled, only bans from these servers will be shown to admins using CentCom. The default sources list is an example.
 #CENTCOM_SOURCE_WHITELIST Beestation MRP,TGMC,FTL13
+
+## If uncommented, this will enable admin 2FA (two-factor authentication).
+## The URL admins will be asked to go to will be here, with %ID% being the ID
+## of their connection attempt.
+#ADMIN_2FA_URL https://example.com/id/%ID%
 
 #### DISCORD STUFFS ####
 ## MAKE SURE ALL SECTIONS OF THIS ARE FILLED OUT BEFORE ENABLING

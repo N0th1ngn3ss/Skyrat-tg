@@ -23,22 +23,22 @@
 	if(QDELETED(item_module))
 		CRASH("activate_module called with improper item_module")
 
-	if(!(item_module in module.modules))
-		CRASH("activate_module called with item_module not in module.modules")
+	if(!(item_module in model.modules))
+		CRASH("activate_module called with item_module not in model.modules")
 
 	if(activated(item_module))
-		to_chat(src, "<span class='warning'>That module is already activated.</span>")
+		to_chat(src, span_warning("That module is already activated."))
 		return FALSE
 
 	if(disabled_modules & BORG_MODULE_ALL_DISABLED)
-		to_chat(src, "<span class='warning'>All modules are disabled!</span>")
+		to_chat(src, span_warning("All modules are disabled!"))
 		return FALSE
 
 	/// What's the first free slot for the borg?
 	var/first_free_slot = !held_items[1] ? 1 : (!held_items[2] ? 2 : (!held_items[3] ? 3 : null))
 
 	if(!first_free_slot || is_invalid_module_number(first_free_slot))
-		to_chat(src, "<span class='warning'>Deactivate a module first!</span>")
+		to_chat(src, span_warning("Deactivate a module first!"))
 		return FALSE
 
 	return equip_module_to_slot(item_module, first_free_slot)
@@ -66,7 +66,6 @@
 	held_items[module_num] = item_module
 	item_module.equipped(src, ITEM_SLOT_HANDS)
 	item_module.mouse_opacity = initial(item_module.mouse_opacity)
-	item_module.layer = ABOVE_HUD_LAYER
 	item_module.plane = ABOVE_HUD_PLANE
 	item_module.forceMove(src)
 
@@ -92,8 +91,8 @@
 	if(QDELETED(item_module))
 		CRASH("unequip_module_from_slot called with improper item_module")
 
-	if(!(item_module in module.modules))
-		CRASH("unequip_module_from_slot called with item_module not in module.modules")
+	if(!(item_module in model.modules))
+		CRASH("unequip_module_from_slot called with item_module not in model.modules")
 
 	item_module.mouse_opacity = MOUSE_OPACITY_OPAQUE
 
@@ -126,7 +125,7 @@
 
 	held_items[module_num] = null
 	item_module.cyborg_unequip(src)
-	item_module.forceMove(module) //Return item to module so it appears in its contents, so it can be taken out again.
+	item_module.forceMove(model) //Return item to configuration so it appears in its contents, so it can be taken out again.
 
 	observer_screen_update(item_module, FALSE)
 	hud_used.update_robot_modules_display()
@@ -155,13 +154,13 @@
 			disabled_modules |= BORG_MODULE_ALL_DISABLED
 
 			playsound(src, 'sound/machines/warning-buzzer.ogg', 75, TRUE, TRUE)
-			audible_message("<span class='warning'>[src] sounds an alarm! \"CRITICAL ERROR: ALL modules OFFLINE.\"</span>")
+			audible_message(span_warning("[src] sounds an alarm! \"CRITICAL ERROR: ALL modules OFFLINE.\""))
 
 			if(builtInCamera)
 				builtInCamera.status = FALSE
-				to_chat(src, "<span class='userdanger'>CRITICAL ERROR: Built in security camera OFFLINE.</span>")
+				to_chat(src, span_userdanger("CRITICAL ERROR: Built in security camera OFFLINE."))
 
-			to_chat(src, "<span class='userdanger'>CRITICAL ERROR: ALL modules OFFLINE.</span>")
+			to_chat(src, span_userdanger("CRITICAL ERROR: ALL modules OFFLINE."))
 
 		if(BORG_CHOOSE_MODULE_TWO)
 			if(disabled_modules & BORG_MODULE_TWO_DISABLED)
@@ -171,8 +170,8 @@
 			disabled_modules |= BORG_MODULE_TWO_DISABLED
 
 			playsound(src, 'sound/machines/warning-buzzer.ogg', 60, TRUE, TRUE)
-			audible_message("<span class='warning'>[src] sounds an alarm! \"SYSTEM ERROR: Module [module_num] OFFLINE.\"</span>")
-			to_chat(src, "<span class='userdanger'>SYSTEM ERROR: Module [module_num] OFFLINE.</span>")
+			audible_message(span_warning("[src] sounds an alarm! \"SYSTEM ERROR: Module [module_num] OFFLINE.\""))
+			to_chat(src, span_userdanger("SYSTEM ERROR: Module [module_num] OFFLINE."))
 
 		if(BORG_CHOOSE_MODULE_THREE)
 			if(disabled_modules & BORG_MODULE_THREE_DISABLED)
@@ -182,8 +181,8 @@
 			disabled_modules |= BORG_MODULE_THREE_DISABLED
 
 			playsound(src, 'sound/machines/warning-buzzer.ogg', 50, TRUE, TRUE)
-			audible_message("<span class='warning'>[src] sounds an alarm! \"SYSTEM ERROR: Module [module_num] OFFLINE.\"</span>")
-			to_chat(src, "<span class='userdanger'>SYSTEM ERROR: Module [module_num] OFFLINE.</span>")
+			audible_message(span_warning("[src] sounds an alarm! \"SYSTEM ERROR: Module [module_num] OFFLINE.\""))
+			to_chat(src, span_userdanger("SYSTEM ERROR: Module [module_num] OFFLINE."))
 
 	return TRUE
 
@@ -213,7 +212,7 @@
 			disabled_modules &= ~BORG_MODULE_ALL_DISABLED
 			if(builtInCamera)
 				builtInCamera.status = TRUE
-				to_chat(src, "<span class='notice'>You hear your built in security camera focus adjust as it comes back online!</span>")
+				to_chat(src, span_notice("You hear your built in security camera focus adjust as it comes back online!"))
 		if(BORG_CHOOSE_MODULE_TWO)
 			if(!(disabled_modules & BORG_MODULE_TWO_DISABLED))
 				return FALSE
@@ -227,7 +226,7 @@
 			inv3.icon_state = initial(inv3.icon_state)
 			disabled_modules &= ~BORG_MODULE_THREE_DISABLED
 
-	to_chat(src, "<span class='notice'>ERROR CLEARED: Module [module_num] back online.</span>")
+	to_chat(src, span_notice("ERROR CLEARED: Module [module_num] back online."))
 
 	return TRUE
 
@@ -245,7 +244,7 @@
  * * add - whether or not the item is being added, or removed.
  */
 /mob/living/silicon/robot/proc/observer_screen_update(obj/item/item_module, add = TRUE)
-	if(observers?.len)
+	if(observers && observers.len)
 		for(var/M in observers)
 			var/mob/dead/observe = M
 			if(observe.client && observe.client.eye == src)
@@ -404,4 +403,4 @@
 	cycle_modules()
 
 /mob/living/silicon/robot/can_hold_items(obj/item/I)
-	return (I && (I in module.modules)) //Only if it's part of our module.
+	return (I && (I in model.modules)) //Only if it's part of our model.

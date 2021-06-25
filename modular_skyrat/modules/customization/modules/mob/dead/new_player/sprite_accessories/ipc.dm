@@ -3,7 +3,7 @@
 ************** IPC SCREENS ****************
 *******************************************/
 /datum/sprite_accessory/screen
-	icon = 'modular_skyrat/modules/customization/icons/mob/sprite_accessory/ipc_screens.dmi'
+	icon = 'modular_skyrat/master_files/icons/mob/sprite_accessory/ipc_screens.dmi'
 	color_src = null
 	key = "ipc_screen"
 	generic = "Screen"
@@ -122,7 +122,8 @@
 
 /datum/sprite_accessory/screen/redtext
 	name = "Red Text"
-	icon_state = "retext"
+	icon_state = "redtext"
+	color_src = 0
 
 /datum/sprite_accessory/screen/sinewave
 	name = "Sine wave"
@@ -160,7 +161,7 @@
 *******************************************/
 
 /datum/sprite_accessory/antenna
-	icon = 'modular_skyrat/modules/customization/icons/mob/sprite_accessory/ipc_antennas.dmi'
+	icon = 'modular_skyrat/master_files/icons/mob/sprite_accessory/ipc_antennas.dmi'
 	color_src = USE_ONE_COLOR
 	default_color = DEFAULT_SECONDARY
 	recommended_species = list("ipc")

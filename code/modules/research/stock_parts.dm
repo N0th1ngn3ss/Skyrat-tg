@@ -1,7 +1,7 @@
 /*Power cells are in code\modules\power\cell.dm
 
 If you create T5+ please take a pass at mech_fabricator.dm. The parts being good enough allows it to go into minus values and create materials out of thin air when printing stuff.*/
-/obj/item/storage/part_replacer
+/obj/item/storage/part_replacer//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODULE
 	name = "rapid part exchange device"
 	desc = "Special mechanical module made to store, sort, and apply standard machine parts."
 	icon_state = "RPED"
@@ -20,7 +20,7 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 		return ..()
 	if(user.Adjacent(T)) // no TK upgrading.
 		if(works_from_distance)
-			Beam(T, icon_state = "rped_upgrade", time = 5)
+			user.Beam(T, icon_state = "rped_upgrade", time = 5)
 		T.exchange_parts(user, src)
 		return TRUE
 	return ..()
@@ -29,7 +29,7 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	if(adjacent || !istype(T) || !T.component_parts)
 		return ..()
 	if(works_from_distance)
-		Beam(T, icon_state = "rped_upgrade", time = 5)
+		user.Beam(T, icon_state = "rped_upgrade", time = 5)
 		T.exchange_parts(user, src)
 		return
 	return ..()
@@ -41,7 +41,7 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	else
 		playsound(src, pshoom_or_beepboopblorpzingshadashwoosh, 40, TRUE)
 
-/obj/item/storage/part_replacer/bluespace
+/obj/item/storage/part_replacer/bluespace//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODULE
 	name = "bluespace rapid part exchange device"
 	desc = "A version of the RPED that allows for replacement of parts and scanning from a distance, along with higher capacity for parts."
 	icon_state = "BS_RPED"
@@ -57,6 +57,7 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	RegisterSignal(src, COMSIG_ATOM_ENTERED, .proc/on_part_entered)
 
 /obj/item/storage/part_replacer/bluespace/proc/on_part_entered(datum/source, obj/item/I)
+	SIGNAL_HANDLER
 	if(!istype(I, /obj/item/stock_parts/cell))
 		return
 
@@ -77,7 +78,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 		new /obj/item/stock_parts/micro_laser(src)
 		new /obj/item/stock_parts/matter_bin(src)
 		new /obj/item/stock_parts/cell/high(src)
-		new /obj/item/stock_parts/electrolite(src)
 
 /obj/item/storage/part_replacer/bluespace/tier2
 
@@ -89,7 +89,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 		new /obj/item/stock_parts/micro_laser/high(src)
 		new /obj/item/stock_parts/matter_bin/adv(src)
 		new /obj/item/stock_parts/cell/super(src)
-		new /obj/item/stock_parts/electrolite/adv(src)
 
 /obj/item/storage/part_replacer/bluespace/tier3
 
@@ -101,7 +100,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 		new /obj/item/stock_parts/micro_laser/ultra(src)
 		new /obj/item/stock_parts/matter_bin/super(src)
 		new /obj/item/stock_parts/cell/hyper(src)
-		new /obj/item/stock_parts/electrolite/super(src)
 
 /obj/item/storage/part_replacer/bluespace/tier4
 
@@ -113,7 +111,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 		new /obj/item/stock_parts/micro_laser/quadultra(src)
 		new /obj/item/stock_parts/matter_bin/bluespace(src)
 		new /obj/item/stock_parts/cell/bluespace(src)
-		new /obj/item/stock_parts/electrolite/bluespace(src)
 
 /obj/item/storage/part_replacer/cargo //used in a cargo crate
 
@@ -124,9 +121,8 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 		new /obj/item/stock_parts/manipulator(src)
 		new /obj/item/stock_parts/micro_laser(src)
 		new /obj/item/stock_parts/matter_bin(src)
-		new /obj/item/stock_parts/electrolite(src)
 
-/obj/item/storage/part_replacer/cyborg
+/obj/item/storage/part_replacer/cyborg//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODULE
 	name = "rapid part exchange device"
 	desc = "Special mechanical module made to store, sort, and apply standard machine parts."
 	icon_state = "borgrped"
@@ -154,7 +150,7 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 
 //Rating 1
 
-/obj/item/stock_parts/capacitor
+/obj/item/stock_parts/capacitor//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODULE ALL COMPONENTS!
 	name = "capacitor"
 	desc = "A basic capacitor used in the construction of a variety of devices."
 	icon_state = "capacitor"
@@ -183,12 +179,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	desc = "A container designed to hold compressed matter awaiting reconstruction."
 	icon_state = "matter_bin"
 	custom_materials = list(/datum/material/iron=80)
-
-/obj/item/stock_parts/electrolite
-	name = "electrolite"
-	desc = "An electrolite component to separate matters into others"
-	icon_state = "electrolite"
-	custom_materials = list(/datum/material/iron = 50, /datum/material/glass = 50)
 
 //Rating 2
 
@@ -227,13 +217,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	rating = 2
 	custom_materials = list(/datum/material/iron=80)
 
-/obj/item/stock_parts/electrolite/adv
-	name = "advanced electrolite"
-	desc = "An electrolite component to separate matters into others"
-	icon_state = "adv_electrolite"
-	rating = 2
-	custom_materials = list(/datum/material/iron = 50, /datum/material/glass = 50)
-
 //Rating 3
 
 /obj/item/stock_parts/capacitor/super
@@ -271,13 +254,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	rating = 3
 	custom_materials = list(/datum/material/iron=80)
 
-/obj/item/stock_parts/electrolite/super
-	name = "super electrolite"
-	desc = "An electrolite component to separate matters into others"
-	icon_state = "super_electrolite"
-	rating = 3
-	custom_materials = list(/datum/material/iron = 50, /datum/material/glass = 50)
-
 //Rating 4
 
 /obj/item/stock_parts/capacitor/quadratic
@@ -314,13 +290,6 @@ If you create T5+ please take a pass at mech_fabricator.dm. The parts being good
 	icon_state = "bluespace_matter_bin"
 	rating = 4
 	custom_materials = list(/datum/material/iron=80)
-
-/obj/item/stock_parts/electrolite/bluespace
-	name = "bluespace electrolite"
-	desc = "An electrolite component to separate matters into others"
-	icon_state = "bluespace_electrolite"
-	rating = 4
-	custom_materials = list(/datum/material/iron = 50, /datum/material/glass = 50)
 
 // Subspace stock parts
 
