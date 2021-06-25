@@ -19,7 +19,7 @@
 
 /mob/dead/new_player/Initialize()
 	if(client && SSticker.state == GAME_STATE_STARTUP)
-		var/obj/screen/splash/S = new(client, TRUE, TRUE)
+		var/atom/movable/screen/splash/S = new(client, TRUE, TRUE)
 		S.Fade(TRUE)
 
 	if(length(GLOB.newplayer_start))
@@ -41,8 +41,8 @@
 	return
 
 /**
-  * This proc generates the panel that opens to all newly joining players, allowing them to join, observe, view polls, view the current crew manifest, and open the character customization menu.
-  */
+ * This proc generates the panel that opens to all newly joining players, allowing them to join, observe, view polls, view the current crew manifest, and open the character customization menu.
+ */
 /mob/dead/new_player/proc/new_player_panel()
 	if (client?.interviewee)
 		return
@@ -243,6 +243,7 @@
 		observer.client.init_verbs()
 	observer.update_icon()
 	observer.stop_sound_channel(CHANNEL_LOBBYMUSIC)
+	deadchat_broadcast(" has observed.", "<b>[observer.real_name]</b>", follow_target = observer, turf_target = get_turf(observer), message_type = DEADCHAT_DEATHRATTLE)
 	QDEL_NULL(mind)
 	qdel(src)
 	return TRUE
@@ -264,6 +265,8 @@
 		//SKYRAT EDIT ADDITION BEGIN - CUSTOMIZATION
 		if(JOB_UNAVAILABLE_QUIRK)
 			return "[jobtitle] is restricted from your quirks."
+		if(JOB_UNAVAILABLE_SPECIES)
+			return "[jobtitle] is restricted from your species."
 		//SKYRAT EDIT END
 	return "Error: Unknown job availability."
 
@@ -291,6 +294,8 @@
 	//SKYRAT EDIT ADDITION BEGIN - CUSTOMIZATION
 	if(job.has_banned_quirk(client.prefs))
 		return JOB_UNAVAILABLE_QUIRK
+	if(job.has_banned_species(client.prefs))
+		return JOB_UNAVAILABLE_SPECIES
 	//SKYRAT EDIT END
 	if(latejoin && !job.special_check_latejoin(client))
 		return JOB_UNAVAILABLE_GENERIC
@@ -333,7 +338,7 @@
 	if(job && !job.override_latejoin_spawn(character))
 		SSjob.SendToLateJoin(character)
 		if(!arrivals_docked)
-			var/obj/screen/splash/Spl = new(character.client, TRUE)
+			var/atom/movable/screen/splash/Spl = new(character.client, TRUE)
 			Spl.Fade(TRUE)
 			character.playsound_local(get_turf(character), 'sound/voice/ApproachingTG.ogg', 25)
 
@@ -342,6 +347,15 @@
 	SSticker.minds += character.mind
 	character.client.init_verbs() // init verbs for the late join
 	var/mob/living/carbon/human/humanc
+
+	//SKRYAT EDIT ADDITION BEGIN - ASSAULTOPS
+	if(SSticker.mode.name == "assaultops")
+		if(is_assaultops_target(character.mind))
+			remove_assaultops_target(character.mind, original=TRUE)
+		if(check_assaultops_target(character))
+			add_assaultops_target(character, notify_target = TRUE)
+	//SKYRAT EDIT ADDITION END
+
 	if(ishuman(character))
 		humanc = character	//Let's retypecast the var to be human,
 
@@ -365,6 +379,8 @@
 			give_magic(humanc)
 		if(GLOB.curse_of_madness_triggered)
 			give_madness(humanc, GLOB.curse_of_madness_triggered)
+
+		SEND_GLOBAL_SIGNAL(COMSIG_GLOB_CREWMEMBER_JOINED, humanc, rank)
 
 	GLOB.joined_player_list += character.ckey
 
@@ -454,17 +470,16 @@
 		client.prefs.random_character()
 		client.prefs.real_name = client.prefs.pref_species.random_name(gender,1)
 
-	if(admin_anon_names)//overrides random name because it achieves the same effect and is an admin enabled event tool
-		client.prefs.random_character()
-		client.prefs.real_name = anonymous_name(src)
-
 	var/is_antag
 	if(mind in GLOB.pre_setup_antags)
 		is_antag = TRUE
 
 	client.prefs.copy_to(H, antagonist = is_antag, is_latejoiner = transfer_after)
 
-	client.prefs.copy_to(H, antagonist = is_antag)
+	if(admin_anon_names)//overrides random name because it achieves the same effect and is an admin enabled event tool
+		randomize_human(H)
+		H.fully_replace_character_name(null, SSticker.anonymousnames.anonymous_name(H))
+
 	H.dna.update_dna_identity()
 	if(mind)
 		if(transfer_after)
@@ -541,11 +556,11 @@
 	return TRUE
 
 /**
-  * Prepares a client for the interview system, and provides them with a new interview
-  *
-  * This proc will both prepare the user by removing all verbs from them, as well as
-  * giving them the interview form and forcing it to appear.
-  */
+ * Prepares a client for the interview system, and provides them with a new interview
+ *
+ * This proc will both prepare the user by removing all verbs from them, as well as
+ * giving them the interview form and forcing it to appear.
+ */
 /mob/dead/new_player/proc/register_for_interview()
 	// First we detain them by removing all the verbs they have on client
 	for (var/v in client.verbs)

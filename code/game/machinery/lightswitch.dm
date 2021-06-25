@@ -1,7 +1,7 @@
 /// The light switch. Can have multiple per area.
 /obj/machinery/light_switch
 	name = "light switch"
-	icon = 'icons/obj/power.dmi'
+	icon = 'icons/obj/power.dmi' //ICON OVERRIDEN IN SKYRAT AESTHETICS - SEE MODULE
 	icon_state = "light1"
 	desc = "Make dark."
 	power_channel = AREA_USAGE_LIGHT
@@ -24,17 +24,21 @@
 	update_icon()
 
 /obj/machinery/light_switch/update_icon_state()
-	SSvis_overlays.remove_vis_overlay(src, managed_vis_overlays)
 	luminosity = 0
 	if(machine_stat & NOPOWER)
 		icon_state = "light-p"
 	else
 		luminosity = 1
-		SSvis_overlays.add_vis_overlay(src, icon, "light-glow", EMISSIVE_LAYER, EMISSIVE_PLANE, dir, alpha)
 		if(area.lightswitch)
 			icon_state = "light1"
 		else
 			icon_state = "light0"
+
+/obj/machinery/light_switch/update_overlays()
+	. = ..()
+	if(machine_stat & NOPOWER)
+		return
+	SSvis_overlays.add_vis_overlay(src, icon, "light-glow", EMISSIVE_STRUCTURE_LAYER, EMISSIVE_STRUCTURE_PLANE, dir, alpha)
 
 /obj/machinery/light_switch/examine(mob/user)
 	. = ..()

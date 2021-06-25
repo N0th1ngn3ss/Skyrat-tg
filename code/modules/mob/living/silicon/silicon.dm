@@ -58,6 +58,8 @@
 	diag_hud_set_status()
 	diag_hud_set_health()
 	add_sensors()
+	ADD_TRAIT(src, TRAIT_ADVANCEDTOOLUSER, ROUNDSTART_TRAIT)
+	ADD_TRAIT(src, TRAIT_MARTIAL_ARTS_IMMUNE, ROUNDSTART_TRAIT)
 
 /mob/living/silicon/Destroy()
 	QDEL_NULL(radio)
@@ -164,9 +166,6 @@
 		to_chat(user, "<span class='alert'>[p_their(TRUE)] outer shell is too tough.</span>")
 	return FALSE
 
-/mob/living/silicon/IsAdvancedToolUser()
-	return TRUE
-
 /proc/islinked(mob/living/silicon/robot/bot, mob/living/silicon/ai/ai)
 	if(!istype(bot) || !istype(ai))
 		return FALSE
@@ -212,6 +211,25 @@
 			return
 		to_chat(usr, href_list["printlawtext"])
 
+	//SKYRAT EDIT ADDITION BEGIN - CUSTOMIZATION
+	if(href_list["lookup_info"])
+		switch(href_list["lookup_info"])
+			if("ooc_prefs")
+				if(client)
+					var/str = "[src]'s OOC Notes : <br> <b>ERP :</b> [client.prefs.erp_pref] <b>| Non-Con :</b> [client.prefs.noncon_pref] <b>| Vore :</b> [client.prefs.vore_pref]"
+					str += "<br>[html_encode(client.prefs.ooc_prefs)]"
+					var/datum/browser/popup = new(usr, "[name]'s ooc info", "[name]'s OOC Information", 500, 200)
+					popup.set_content(text("<HTML><HEAD><TITLE>[]</TITLE></HEAD><BODY><TT>[]</TT></BODY></HTML>", "[name]'s OOC information", replacetext(str, "\n", "<BR>")))
+					popup.open()
+					return
+
+			if("silicon_flavor_text")
+				if(client && length(client.prefs.features["silicon_flavor_text"]))
+					var/datum/browser/popup = new(usr, "[name]'s flavor text", "[name]'s Flavor Text", 500, 200)
+					popup.set_content(text("<HTML><HEAD><TITLE>[]</TITLE></HEAD><BODY><TT>[]</TT></BODY></HTML>", "[name]'s flavor text", replacetext(client.prefs.features["silicon_flavor_text"], "\n", "<BR>")))
+					popup.open()
+					return
+	//SKYRAT EDIT ADDITION END
 	return
 
 /mob/living/silicon/proc/statelaws(force = 0)

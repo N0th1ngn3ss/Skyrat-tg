@@ -115,6 +115,10 @@
 	name = "Otie"
 	icon_state = "otie"
 
+/datum/sprite_accessory/snouts/mammal/otiesmile
+	name = "Otie Smile"
+	icon_state = "otiesmile"
+
 /*/datum/sprite_accessory/snouts/mammal/round
 	name = "Mammal Round"
 	icon_state = "round"
@@ -242,6 +246,10 @@
 	name = "Otie (Top)"
 	icon_state = "fotie"
 
+/datum/sprite_accessory/snouts/mammal/fotiesmile
+	name = "Otie Smile (Top)"
+	icon_state = "fotiesmile"
+
 /datum/sprite_accessory/snouts/mammal/frodent
 	name = "Rodent (Top)"
 	icon_state = "frodent"
@@ -332,3 +340,8 @@
 	icon_state = "rat"
 	color_src = USE_MATRIXED_COLORS
 
+/datum/sprite_accessory/snouts/mammal/stubby
+	name = "Stubby"
+	icon_state = "stubby"
+	color_src = USE_MATRIXED_COLORS
+	use_muzzled_sprites = FALSE

@@ -1,3 +1,4 @@
+/// Any humanoid (non-Xeno) mob, such as humans, plasmamen, lizards.
 /mob/living/carbon/human
 	name = "Unknown"
 	real_name = "Unknown"
@@ -13,6 +14,9 @@
 	mob_biotypes = MOB_ORGANIC|MOB_HUMANOID
 	blocks_emissive = EMISSIVE_BLOCK_UNIQUE
 	can_be_shoved_into = TRUE
+
+	maxHealth = MAX_HUMAN_LIFE //SKYRAT EDIT ADDITION
+	health = MAX_HUMAN_LIFE //SKYRAT EDIT ADDITION
 
 	//Hair colour and style
 	var/hair_color = "000"
@@ -50,14 +54,13 @@
 
 	var/special_voice = "" // For changing our voice. Used by a symptom.
 
-	var/bleedsuppress = 0 //for stopping bloodloss, eventually this will be limb-based like bleeding
-
 	var/name_override //For temporary visible name changes
 
 	var/datum/physiology/physiology
 
 	var/list/datum/bioware = list()
 
+	/// What types of mobs are allowed to ride/buckle to this mob
 	var/static/list/can_ride_typecache = typecacheof(list(/mob/living/carbon/human, /mob/living/simple_animal/slime, /mob/living/simple_animal/parrot))
 	var/lastpuke = 0
 	var/last_fire_update
@@ -70,3 +73,8 @@
 	/// How many "units of blood" we have on our hands
 	var/blood_in_hands = 0
 
+	/// The core temperature of the human compaired to the skin temp of the body
+	var/coretemperature = BODYTEMP_NORMAL
+
+	///Exposure to damaging heat levels increases stacks, stacks clean over time when temperatures are lower. Stack is consumed to add a wound.
+	var/heat_exposure_stacks = 0

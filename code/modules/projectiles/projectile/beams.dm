@@ -119,7 +119,7 @@
 			SSexplosions.medturf += target
 
 /obj/projectile/beam/pulse/shotgun
-	damage = 40
+	damage = 30
 
 /obj/projectile/beam/pulse/heavy
 	name = "heavy pulse laser"
@@ -134,7 +134,7 @@
 
 /obj/projectile/beam/emitter
 	name = "emitter beam"
-	icon_state = "emitter"
+	icon_state = "emitter" //ICON OVERRIDEN IN SKYRAT AESTHETICS - SEE MODULE
 	damage = 30
 	impact_effect_type = /obj/effect/temp_visual/impact_effect/green_laser
 	light_color = LIGHT_COLOR_GREEN

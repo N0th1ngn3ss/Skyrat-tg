@@ -2,6 +2,7 @@
 	name = "Bolt Rifle"
 	desc = "Some kind of bolt action rifle. You get the feeling you shouldn't have this."
 	icon_state = "moistnugget"
+	w_class = WEIGHT_CLASS_BULKY
 	inhand_icon_state = "moistnugget"
 	worn_icon_state = "moistnugget"
 	mag_type = /obj/item/ammo_box/magazine/internal/boltaction
@@ -53,7 +54,6 @@
 	name = "\improper Mosin Nagant"
 	desc = "This piece of junk looks like something that could have been used 700 years ago. It feels slightly moist."
 	sawn_desc = "An extremely sawn-off Mosin Nagant, popularly known as an \"obrez\". There was probably a reason it wasn't manufactured this short to begin with."
-	w_class = WEIGHT_CLASS_BULKY
 	weapon_weight = WEAPON_HEAVY
 	icon_state = "moistnugget"
 	inhand_icon_state = "moistnugget"
@@ -63,6 +63,7 @@
 	knife_x_offset = 27
 	knife_y_offset = 13
 	can_be_sawn_off = TRUE
+	realistic = TRUE
 
 /obj/item/gun/ballistic/rifle/boltaction/sawoff(mob/user)
 	. = ..()
@@ -77,12 +78,29 @@
 		process_fire(user, user, FALSE)
 		. = 1
 
+/obj/item/gun/ballistic/rifle/boltaction/harpoon
+	name = "ballistic harpoon gun"
+	desc = "A weapon favored by carp hunters, but just as infamously employed by agents of the Animal Rights Consortium against human aggressors. Because it's ironic."
+	icon_state = "speargun"
+	inhand_icon_state = "speargun"
+	worn_icon_state = "speargun"
+	mag_type = /obj/item/ammo_box/magazine/internal/boltaction/harpoon
+	fire_sound = 'sound/weapons/gun/sniper/shot.ogg'
+	can_be_sawn_off = FALSE
+
+/obj/item/gun/ballistic/rifle/boltaction/brand_new
+	name = "Mosin Nagant"
+	desc = "Brand new Mosin Nagant issued by Nanotrasen for their interns. You would rather not to damage it."
+	can_be_sawn_off = FALSE
+	realistic = FALSE
+
 /obj/item/gun/ballistic/rifle/boltaction/enchanted
 	name = "enchanted bolt action rifle"
 	desc = "Careful not to lose your head."
 	var/guns_left = 30
 	mag_type = /obj/item/ammo_box/magazine/internal/boltaction/enchanted
 	can_be_sawn_off = FALSE
+	realistic = FALSE
 
 /obj/item/gun/ballistic/rifle/boltaction/enchanted/arcane_barrage
 	name = "arcane barrage"
@@ -96,6 +114,7 @@
 	item_flags = NEEDS_PERMIT | DROPDEL | ABSTRACT | NOBLUDGEON
 	flags_1 = NONE
 	trigger_guard = TRIGGER_GUARD_ALLOW_ALL
+	realistic = FALSE
 
 	mag_type = /obj/item/ammo_box/magazine/internal/boltaction/enchanted/arcane_barrage
 

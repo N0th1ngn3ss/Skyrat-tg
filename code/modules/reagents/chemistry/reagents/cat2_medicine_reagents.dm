@@ -183,7 +183,10 @@
 		M.adjustFireLoss(-2*REM, FALSE)
 	else
 		M.adjustFireLoss(-1.25*REM, FALSE)
-	M.adjust_bodytemperature(rand(-25,-5)*(TEMPERATURE_DAMAGE_COEFFICIENT*REM), 50)
+	M.adjust_bodytemperature(rand(-25,-5) * (TEMPERATURE_DAMAGE_COEFFICIENT*REM), 50)
+	if(ishuman(M))
+		var/mob/living/carbon/human/humi = M
+		humi.adjust_coretemperature(rand(-25,-5) * (TEMPERATURE_DAMAGE_COEFFICIENT*REM), 50)
 	M.reagents?.chem_temp +=(-10*REM)
 	M.adjust_fire_stacks(-1)
 	..()
@@ -200,7 +203,10 @@
 		exposed_mob.extinguish_mob()
 
 /datum/reagent/medicine/c2/hercuri/overdose_process(mob/living/carbon/M)
-	M.adjust_bodytemperature(-10*TEMPERATURE_DAMAGE_COEFFICIENT*REM,50) //chilly chilly
+	M.adjust_bodytemperature(-10 * TEMPERATURE_DAMAGE_COEFFICIENT*REM,50) //chilly chilly
+	if(ishuman(M))
+		var/mob/living/carbon/human/humi = M
+		humi.adjust_coretemperature(-10 * TEMPERATURE_DAMAGE_COEFFICIENT*REM,50)
 	..()
 
 
@@ -460,6 +466,7 @@
 	ADD_TRAIT(M, TRAIT_NOCRITDAMAGE,type)
 
 /datum/reagent/medicine/c2/penthrite/on_mob_life(mob/living/carbon/human/H)
+	H.adjustStaminaLoss(-25 * REM) //SKYRAT EDIT ADDITION - COMBAT - makes your heart beat faster, fills you with energy. For miners
 	H.adjustOrganLoss(ORGAN_SLOT_STOMACH,0.25)
 	if(H.health <= HEALTH_THRESHOLD_CRIT && H.health > (H.crit_threshold + HEALTH_THRESHOLD_FULLCRIT*2)) //we cannot save someone below our lowered crit threshold.
 

@@ -186,10 +186,10 @@
 
 	var/cooldown_check = 0 // Used interally, you don't want to modify
 
-	var/cooldown = 40 // Default wait time until can stun again.
+	var/cooldown = 1 SECONDS // Default wait time until can stun again. - SKYRAT EDIT CHANGE - ORIGINAL: 40
 	var/knockdown_time_carbon = (1.5 SECONDS) // Knockdown length for carbons.
 	var/stun_time_silicon = (5 SECONDS) // If enabled, how long do we stun silicons.
-	var/stamina_damage = 55 // Do we deal stamina damage.
+	var/stamina_damage = 30 // Do we deal stamina damage. - SKYRAT EDIT CHANGE - ORIGINAL: 55
 	var/affect_silicon = FALSE // Does it stun silicons.
 	var/on_sound // "On" sound, played when switching between able to stun or not.
 	var/on_stun_sound = 'sound/effects/woodhit.ogg' // Default path to sound for when we stun.
@@ -252,8 +252,12 @@
 	if((HAS_TRAIT(user, TRAIT_CLUMSY)) && prob(50))
 		to_chat(user, "<span class ='userdanger'>You hit yourself over the head!</span>")
 
+		/* - SKYRAT EDIT REMOVAL BEGIN
 		user.Paralyze(knockdown_time_carbon * force)
 		user.apply_damage(stamina_damage, STAMINA, BODY_ZONE_HEAD)
+		*/ //SKYRAT EDIT REMOVAL END
+		user.apply_damage(force*0.5, BRUTE, BODY_ZONE_HEAD) //SKYRAT EDIT ADDITION
+		user.StaminaKnockdown(stamina_damage) //SKYRAT EDIT ADDITION
 
 		additional_effects_carbon(user) // user is the target here
 		if(ishuman(user))
@@ -304,8 +308,14 @@
 				user.do_attack_animation(target)
 
 			playsound(get_turf(src), on_stun_sound, 75, TRUE, -1)
+			/* - SKYRAT EDIT REMOVAL BEGIN
 			target.Knockdown(knockdown_time_carbon)
 			target.apply_damage(stamina_damage, STAMINA, BODY_ZONE_CHEST)
+			*/ //SKYRAT EDIT END
+			//SKYRAT EDIT ADDITION - BEGIN
+			target.apply_damage(force*0.5, BRUTE, BODY_ZONE_CHEST)
+			target.StaminaKnockdown(stamina_damage)
+			//SKYRAT EDIT END
 			additional_effects_carbon(target, user)
 
 			log_combat(user, target, "stunned", src)
@@ -328,7 +338,7 @@
 	desc = "A strange box containing wood working tools and an instruction paper to turn stun batons into something else."
 	icon = 'icons/obj/storage.dmi'
 	icon_state = "uk"
-	custom_price = 450
+	custom_price = PAYCHECK_HARD * 4.5
 
 /obj/item/melee/classic_baton/telescopic
 	name = "telescopic baton"
@@ -411,7 +421,7 @@
 	force = 5
 
 	cooldown = 25
-	stamina_damage = 85
+	stamina_damage = 30 //SKYRAT EDIT CHANGE - ORIGINAL: 85
 	affect_silicon = TRUE
 	on_sound = 'sound/weapons/contractorbatonextend.ogg'
 	on_stun_sound = 'sound/effects/contractorbatonhit.ogg'
@@ -570,7 +580,7 @@
 /obj/item/melee/roastingstick/Initialize()
 	. = ..()
 	if (!ovens)
-		ovens = typecacheof(list(/obj/singularity, /obj/machinery/power/supermatter_crystal, /obj/structure/bonfire))
+		ovens = typecacheof(list(/obj/singularity, /obj/energy_ball, /obj/machinery/power/supermatter_crystal, /obj/structure/bonfire))
 
 /obj/item/melee/roastingstick/attack_self(mob/user)
 	on = !on
@@ -640,7 +650,7 @@
 		if (istype(target, /obj/singularity) && get_dist(user, target) < 10)
 			to_chat(user, "<span class='notice'>You send [held_sausage] towards [target].</span>")
 			playsound(src, 'sound/items/rped.ogg', 50, TRUE)
-			beam = user.Beam(target,icon_state="rped_upgrade",time=100)
+			beam = user.Beam(target,icon_state="rped_upgrade", time = 10 SECONDS)
 		else if (user.Adjacent(target))
 			to_chat(user, "<span class='notice'>You extend [src] towards [target].</span>")
 			playsound(src.loc, 'sound/weapons/batonextend.ogg', 50, TRUE)
@@ -685,5 +695,5 @@
 /obj/item/melee/cleric_mace/Initialize()
 	. = ..()
 	overlay = mutable_appearance(icon, overlay_state)
-	overlay.appearance_flags = RESET_COLOR
+	overlay.appearance_flags = RESET_COLOR | RESET_ALPHA | KEEP_APART
 	add_overlay(overlay)

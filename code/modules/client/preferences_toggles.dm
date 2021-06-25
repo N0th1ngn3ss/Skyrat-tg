@@ -3,6 +3,9 @@
 
 //Example usage TOGGLE_CHECKBOX(datum/verbs/menu/settings/Ghost/chatterbox, toggle_ghost_ears)()
 
+/datum/verbs/menu/settings
+	name = "Settings"
+
 //override because we don't want to save preferences twice.
 /datum/verbs/menu/settings/Set_checked(client/C, verbpath)
 	if (checkbox == CHECKBOX_GROUP)
@@ -19,6 +22,9 @@
 	usr.client.prefs.current_tab = 1
 	usr.client.prefs.needs_update = TRUE //SKYRAT EDIT ADDITION - CUSTOMIZATION
 	usr.client.prefs.ShowChoices(usr)
+
+/datum/verbs/menu/settings/ghost
+	name = "Ghost"
 
 //toggles
 /datum/verbs/menu/settings/ghost/chatterbox
@@ -90,6 +96,17 @@ TOGGLE_CHECKBOX(/datum/verbs/menu/settings/ghost/chatterbox, toggle_ghost_laws)(
 /datum/verbs/menu/settings/ghost/chatterbox/toggle_ghost_laws/Get_checked(client/C)
 	return C.prefs.chat_toggles & CHAT_GHOSTLAWS
 
+TOGGLE_CHECKBOX(/datum/verbs/menu/settings/ghost/chatterbox, toggle_hear_login_logout)()
+	set name = "Show/Hide Login/Logout messages"
+	set category = "Preferences"
+	set desc = "As a ghost, see when someone reconnects or disconnects"
+	usr.client.prefs.chat_toggles ^= CHAT_LOGIN_LOGOUT
+	to_chat(usr, "As a ghost, you will now [(usr.client.prefs.chat_toggles & CHAT_LOGIN_LOGOUT) ? "be notified" : "no longer be notified"] when someone disconnects or reconnects.")
+	usr.client.prefs.save_preferences()
+	SSblackbox.record_feedback("nested tally", "preferences_verb", 1, list("Toggle Hearing Login/Logout", "[usr.client.prefs.chat_toggles & CHAT_LOGIN_LOGOUT ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
+/datum/verbs/menu/settings/ghost/chatterbox/toggle_hear_login_logout/Get_checked(client/C)
+	return C.prefs.chat_toggles & CHAT_LOGIN_LOGOUT
+
 /datum/verbs/menu/settings/ghost/chatterbox/events
 	name = "Events"
 
@@ -126,6 +143,9 @@ TOGGLE_CHECKBOX(/datum/verbs/menu/settings/ghost, togglemidroundantag)()
 	SSblackbox.record_feedback("nested tally", "preferences_verb", 1, list("Toggle Midround Antag", "[usr.client.prefs.toggles & MIDROUND_ANTAG ? "Enabled" : "Disabled"]")) //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 /datum/verbs/menu/settings/ghost/togglemidroundantag/Get_checked(client/C)
 	return C.prefs.toggles & MIDROUND_ANTAG
+
+/datum/verbs/menu/settings/sound
+	name = "Sound"
 
 TOGGLE_CHECKBOX(/datum/verbs/menu/settings/sound, toggletitlemusic)()
 	set name = "Hear/Silence Lobby Music"

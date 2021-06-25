@@ -1,4 +1,4 @@
-//this datum is used by the events controller to dictate how it selects events
+//this singleton datum is used by the events controller to dictate how it selects events
 /datum/round_event_control
 	var/name						//The human-readable name of the event
 	var/typepath					//The typepath of the event datum /datum/round_event
@@ -63,8 +63,10 @@
 
 	triggering = TRUE
 	if (alert_observers)
-		message_admins("Random Event triggering in 10 seconds: [name] (<a href='?src=[REF(src)];cancel=1'>CANCEL</a>)")
-		sleep(100)
+		//message_admins("Random Event triggering in 10 seconds: [name] (<a href='?src=[REF(src)];cancel=1'>CANCEL</a>)") //ORIGINAL
+		//sleep(100) //ORIGINAL
+		message_admins("Random Event triggering in 60 seconds: [name] (<a href='?src=[REF(src)];cancel=1'>CANCEL</a>)") //SKYRAT EDIT CHANGE - EVENTS
+		sleep(600) //SKYRAT EDIT CHANGE - EVENTS
 		var/gamemode = SSticker.mode.config_tag
 		var/players_amt = get_active_player_count(alive_check = TRUE, afk_check = TRUE, human_check = TRUE)
 		if(!canSpawnEvent(players_amt, gamemode))

@@ -30,8 +30,8 @@
 		alarm()
 
 /**
-  * Initiates launching sequence by checking if all components are functional, opening poddoors, firing mass drivers and then closing poddoors
-  */
+ * Initiates launching sequence by checking if all components are functional, opening poddoors, firing mass drivers and then closing poddoors
+ */
 /obj/machinery/computer/pod/proc/alarm()
 	if(machine_stat & (NOPOWER|BROKEN))
 		return
@@ -56,6 +56,11 @@
 			M.close()
 
 /obj/machinery/computer/pod/ui_interact(mob/user, datum/tgui/ui)
+	//SKYRAT EDIT ADDITON BEGIN - AESTHETICS
+	if(clicksound && world.time > next_clicksound && isliving(user))
+		next_clicksound = world.time + rand(50, 100)
+		playsound(src, get_sfx_skyrat(clicksound), clickvol)
+	//SKYRAT EDIT END
 	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
 		ui = new(user, src, "MassDriverControl", name)
@@ -155,6 +160,9 @@
 
 /obj/machinery/computer/pod/old/mass_driver_controller/trash
 	id = MASSDRIVER_DISPOSALS
+
+/obj/machinery/computer/pod/old/mass_driver_controller/shack
+	id = MASSDRIVER_SHACK
 
 /obj/machinery/computer/pod/old/syndicate
 	name = "\improper ProComp Executive IIc"

@@ -41,8 +41,8 @@
 	var/announce_span = "warning" //The gamemode's name will be in this span during announcement.
 	var/announce_text = "This gamemode forgot to set a descriptive text! Uh oh!" //Used to describe a gamemode when it's announced.
 
-	var/const/waittime_l = 600
-	var/const/waittime_h = 1800 // started at 1800
+	var/waittime_l = 600 //SKYRAT EDIT CHANGE - ASSAULTOPS - ORIGINAL: var/const/waittime_l = 600
+	var/waittime_h = 1800 // started at 1800 //SKYRAT EDIT CHANGE - ASSAULTOPS - ORIGINAL: var/waittime_h = 1800
 
 	var/list/datum/station_goal/station_goals = list()
 
@@ -196,7 +196,7 @@
 		message_admins("Roundtype conversion cancelled, the game appears to have finished!")
 		round_converted = 0
 		return
-	 //somewhere between 1 and 3 minutes from now
+	//somewhere between 1 and 3 minutes from now
 	if(!CONFIG_GET(keyed_list/midround_antag)[SSticker.mode.config_tag])
 		round_converted = 0
 		return TRUE

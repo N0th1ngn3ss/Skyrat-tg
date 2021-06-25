@@ -71,7 +71,7 @@
 											   "<span class='revenwarning'>Violet lights, dancing in your vision, receding--</span>")
 					draining = FALSE
 					return
-				var/datum/beam/B = Beam(target,icon_state="drain_life",time=INFINITY)
+				var/datum/beam/B = Beam(target,icon_state="drain_life")
 				if(do_after(src, 46, target, timed_action_flags = IGNORE_HELD_ITEM)) //As one cannot prove the existance of ghosts, ghosts cannot prove the existance of the target they were draining.
 					change_essence_amount(essence_drained, FALSE, target)
 					if(essence_drained <= 90 && target.stat != DEAD)
@@ -214,7 +214,7 @@
 	for(var/mob/living/carbon/human/M in view(shock_range, L))
 		if(M == user)
 			continue
-		L.Beam(M,icon_state="purple_lightning",time=5)
+		L.Beam(M,icon_state="purple_lightning", time = 5)
 		if(!M.anti_magic_check(FALSE, TRUE))
 			M.electrocute_act(shock_damage, L, flags = SHOCK_NOGLOVES)
 		do_sparks(4, FALSE, M)
@@ -310,6 +310,12 @@
 			if(prob(50))
 				new /obj/effect/temp_visual/revenant(thing.loc)
 			thing.emag_act(null)
+		//SKYRAT EDIT ADDITION BEGIN - CLONING
+		else
+			if(!istype(thing, /obj/machinery/clonepod)) //I hate everything but mostly the fact there's no better way to do this without just not affecting it at all
+				thing.emp_act(EMP_HEAVY)
+		//SKYRAT EDIT END
+
 	for(var/mob/living/silicon/robot/S in T) //Only works on cyborgs, not AI
 		playsound(S, 'sound/machines/warning-buzzer.ogg', 50, TRUE)
 		new /obj/effect/temp_visual/revenant(S.loc)

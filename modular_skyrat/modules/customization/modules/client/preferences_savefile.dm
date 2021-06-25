@@ -141,6 +141,8 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	READ_FILE(S["max_chat_length"], max_chat_length)
 	READ_FILE(S["see_chat_non_mob"] , see_chat_non_mob)
 	READ_FILE(S["see_rc_emotes"] , see_rc_emotes)
+	READ_FILE(S["broadcast_login_logout"] , broadcast_login_logout)
+
 	READ_FILE(S["tgui_fancy"], tgui_fancy)
 	READ_FILE(S["tgui_lock"], tgui_lock)
 	READ_FILE(S["buttons_locked"], buttons_locked)
@@ -150,6 +152,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 
 	READ_FILE(S["default_slot"], default_slot)
 	READ_FILE(S["chat_toggles"], chat_toggles)
+	READ_FILE(S["skyrat_toggles"], skyrat_toggles) //SKYRAT EDIT
 	READ_FILE(S["toggles"], toggles)
 	READ_FILE(S["ghost_form"], ghost_form)
 	READ_FILE(S["ghost_orbit"], ghost_orbit)
@@ -195,12 +198,14 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	max_chat_length = sanitize_integer(max_chat_length, 1, CHAT_MESSAGE_MAX_LENGTH, initial(max_chat_length))
 	see_chat_non_mob	= sanitize_integer(see_chat_non_mob, FALSE, TRUE, initial(see_chat_non_mob))
 	see_rc_emotes	= sanitize_integer(see_rc_emotes, FALSE, TRUE, initial(see_rc_emotes))
+	broadcast_login_logout = sanitize_integer(broadcast_login_logout, FALSE, TRUE, initial(broadcast_login_logout))
 	tgui_fancy		= sanitize_integer(tgui_fancy, FALSE, TRUE, initial(tgui_fancy))
 	tgui_lock		= sanitize_integer(tgui_lock, FALSE, TRUE, initial(tgui_lock))
 	buttons_locked	= sanitize_integer(buttons_locked, FALSE, TRUE, initial(buttons_locked))
 	windowflashing	= sanitize_integer(windowflashing, FALSE, TRUE, initial(windowflashing))
 	default_slot	= sanitize_integer(default_slot, 1, max_save_slots, initial(default_slot))
 	toggles			= sanitize_integer(toggles, 0, (2**24)-1, initial(toggles))
+	skyrat_toggles	= sanitize_integer(skyrat_toggles, 0, (2**24)-1, initial(skyrat_toggles)) //SKYRAT EDIT
 	clientfps		= sanitize_integer(clientfps, 0, 1000, 40)
 	parallax		= sanitize_integer(parallax, PARALLAX_INSANE, PARALLAX_DISABLE, null)
 	ambientocclusion	= sanitize_integer(ambientocclusion, FALSE, TRUE, initial(ambientocclusion))
@@ -241,6 +246,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["max_chat_length"], max_chat_length)
 	WRITE_FILE(S["see_chat_non_mob"], see_chat_non_mob)
 	WRITE_FILE(S["see_rc_emotes"], see_rc_emotes)
+	WRITE_FILE(S["broadcast_login_logout"], broadcast_login_logout)
 	WRITE_FILE(S["tgui_fancy"], tgui_fancy)
 	WRITE_FILE(S["tgui_lock"], tgui_lock)
 	WRITE_FILE(S["buttons_locked"], buttons_locked)
@@ -249,6 +255,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["default_slot"], default_slot)
 	WRITE_FILE(S["toggles"], toggles)
 	WRITE_FILE(S["chat_toggles"], chat_toggles)
+	WRITE_FILE(S["skyrat_toggles"], skyrat_toggles) //SKYRAT EDIT
 	WRITE_FILE(S["ghost_form"], ghost_form)
 	WRITE_FILE(S["ghost_orbit"], ghost_orbit)
 	WRITE_FILE(S["ghost_accs"], ghost_accs)
@@ -453,6 +460,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 			job_preferences -= j
 
 	all_quirks = SANITIZE_LIST(all_quirks)
+	validate_quirks()
 
 	//All the new skyrat related stuff here
 	READ_FILE(S["features"], features)
@@ -477,6 +485,17 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	READ_FILE(S["augments"] , augments)
 	READ_FILE(S["augment_limb_styles"] , augment_limb_styles)
 
+	READ_FILE(S["undershirt_color"], undershirt_color)
+	undershirt_color			= sanitize_hexcolor(undershirt_color, 3, 0)
+
+	READ_FILE(S["socks_color"], socks_color)
+	socks_color			= sanitize_hexcolor(socks_color, 3, 0)
+
+	READ_FILE(S["foodlikes"], foodlikes)
+	READ_FILE(S["fooddislikes"], fooddislikes)
+
+	foodlikes = SANITIZE_LIST(foodlikes)
+	fooddislikes = SANITIZE_LIST(fooddislikes)
 	features = SANITIZE_LIST(features)
 	mutant_bodyparts = SANITIZE_LIST(mutant_bodyparts)
 	body_markings = SANITIZE_LIST(body_markings)
@@ -491,6 +510,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 		if(!LI)
 			loadout -= path
 			continue
+		loadout[path] = LI.get_valid_information(loadout[path])//Savefile validation
 		accumulated_cost += LI.cost
 	if(accumulated_cost > loadout_points) //Not enough points, reset loadout
 		loadout = list()
@@ -533,9 +553,9 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 			augments -= aug_slot
 	augment_limb_styles = SANITIZE_LIST(augment_limb_styles)
 	//validating limb styles
-	for(var/key in augment_limb_styles)
-		if(!GLOB.robotic_styles_list[key])
-			augment_limb_styles -= key
+	for(var/limb_slot in augment_limb_styles)
+		if(!GLOB.robotic_styles_list[augment_limb_styles[limb_slot]])
+			augment_limb_styles -= limb_slot
 
 	validate_species_parts()
 
@@ -593,6 +613,8 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["scars3"]						, scars_list["3"])
 	WRITE_FILE(S["scars4"]						, scars_list["4"])
 	WRITE_FILE(S["scars5"]						, scars_list["5"])
+	WRITE_FILE(S["foodlikes"]					, foodlikes)
+	WRITE_FILE(S["fooddislikes"]				, fooddislikes)
 
 
 	//Custom names
@@ -633,6 +655,9 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 
 	WRITE_FILE(S["augments"] , augments)
 	WRITE_FILE(S["augment_limb_styles"] , augment_limb_styles)
+
+	WRITE_FILE(S["undershirt_color"], undershirt_color)
+	WRITE_FILE(S["socks_color"], socks_color)
 
 	return TRUE
 
