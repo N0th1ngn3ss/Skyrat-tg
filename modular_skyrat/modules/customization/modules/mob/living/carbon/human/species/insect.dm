@@ -1,8 +1,8 @@
 /datum/species/insect
 	name = "Anthromorphic Insect"
-	id = "insect"
+	id = SPECIES_INSECT
 	say_mod = "chitters"
-	default_color = "4B4B4B"
+	default_color = "#4B4B4B"
 	species_traits = list(
 		MUTCOLORS,
 		EYECOLOR,

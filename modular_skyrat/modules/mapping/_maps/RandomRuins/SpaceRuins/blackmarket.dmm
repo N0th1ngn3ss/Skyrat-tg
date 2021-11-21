@@ -23,7 +23,7 @@
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
 "cH" = (
-/obj/machinery/atmospherics/components/unary/tank/air,
+/obj/machinery/atmospherics/components/tank/air,
 /obj/effect/decal/cleanable/dirt/dust,
 /turf/open/floor/plating,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
@@ -94,11 +94,6 @@
 /obj/effect/decal/cleanable/dirt/dust,
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
-"gN" = (
-/obj/effect/spawner/scatter/grime,
-/obj/effect/decal/cleanable/dirt/dust,
-/turf/open/floor/iron,
-/area/ruin/space/has_grav/powered/skyrat/blackmarket)
 "hk" = (
 /obj/effect/turf_decal/tile/brown{
 	dir = 8
@@ -129,7 +124,7 @@
 /turf/open/floor/iron/showroomfloor,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
 "iY" = (
-/obj/machinery/power/apc/auto_name/north,
+/obj/machinery/power/apc/auto_name/directional/north,
 /obj/structure/cable,
 /obj/effect/decal/cleanable/dirt/dust,
 /turf/open/floor/plating,
@@ -321,6 +316,17 @@
 	},
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden,
 /obj/effect/decal/cleanable/dirt/dust,
+/obj/item/storage/box/ingredients/random,
+/obj/item/storage/box/ingredients/random,
+/obj/item/storage/box/ingredients/random,
+/obj/item/storage/box/ingredients/wildcard,
+/obj/item/storage/box/ingredients/wildcard,
+/obj/item/storage/box/ingredients/wildcard,
+/obj/item/storage/box/ingredients/wildcard,
+/obj/item/storage/box/ingredients/fiesta,
+/obj/item/storage/box/ingredients/fiesta,
+/obj/item/storage/box/ingredients/fiesta,
+/obj/item/storage/box/ingredients/fiesta,
 /turf/open/floor/iron/dark/side{
 	dir = 1
 	},
@@ -350,6 +356,7 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden,
 /obj/effect/decal/cleanable/dirt/dust,
 /obj/item/crowbar,
+/obj/item/storage/backpack/duffelbag/syndie,
 /turf/open/floor/wood,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
 "vg" = (
@@ -541,6 +548,7 @@
 	},
 /obj/item/stack/sheet/glass/fifty,
 /obj/effect/decal/cleanable/dirt/dust,
+/obj/item/holosign_creator/atmos,
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
 "LL" = (
@@ -640,8 +648,8 @@
 /obj/effect/turf_decal/tile/yellow{
 	dir = 8
 	},
-/obj/effect/spawner/lootdrop/prison_contraband,
-/obj/effect/spawner/lootdrop/armory_contraband/metastation,
+/obj/effect/spawner/random/contraband/prison,
+/obj/effect/spawner/random/contraband/armory,
 /obj/effect/decal/cleanable/dirt/dust,
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
@@ -782,10 +790,10 @@
 /obj/effect/turf_decal/tile/yellow{
 	dir = 8
 	},
-/obj/item/pickaxe,
 /obj/item/mining_scanner,
 /obj/item/storage/bag/ore,
 /obj/effect/decal/cleanable/dirt/dust,
+/obj/item/pickaxe/mini,
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/powered/skyrat/blackmarket)
 "YG" = (
@@ -906,7 +914,7 @@ wq
 Wi
 Zh
 tC
-gN
+Hq
 qJ
 OC
 Zh

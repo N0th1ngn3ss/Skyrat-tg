@@ -4,13 +4,15 @@
 	name = "bluespace artillery control"
 	use_power = NO_POWER_USE
 	circuit = /obj/item/circuitboard/computer/bsa_control
-	icon = 'icons/obj/machines/particle_accelerator.dmi'
+	icon = 'modular_skyrat/modules/fixing_missing_icons/particle_accelerator.dmi'
 	icon_state = "control_boxp"
 	var/obj/machinery/bsa_powercore/core //The moveable power core link
 	var/obj/machinery/bsa/full/cannon
 	var/notice
 	var/target
 	var/area_aim = FALSE //should also show areas for targeting
+
+	connectable = FALSE //connecting_computer change: since icon_state is not a typical console, it cannot be connectable.
 
 /obj/machinery/computer/bsa_control/multitool_act(mob/living/user, obj/item/I)
 	if(!multitool_check_buffer(user, I))
@@ -19,17 +21,17 @@
 	if(M.buffer)
 		if(istype(M.buffer, /obj/machinery/bsa_powercore))
 			if(!cannon)
-				to_chat(user, "<span class='warning'>There is no cannon linked to this control unit!</span>")
+				to_chat(user, span_warning("There is no cannon linked to this control unit!"))
 				return FALSE
 			if(core)
-				to_chat(user, "<span class='warning'>There is already a core linked to this control unit!</span>")
+				to_chat(user, span_warning("There is already a core linked to this control unit!"))
 				return FALSE
 			core = M.buffer
 			core.control_unit = src
 			M.buffer = null
-			to_chat(user, "<span class='notice'>You link [src] with [core].</span>")
+			to_chat(user, span_notice("You link [src] with [core]."))
 	else
-		to_chat(user, "<span class='warning'>[I]'s data buffer is empty!</span>")
+		to_chat(user, span_warning("[I]'s data buffer is empty!"))
 	return TRUE
 
 /obj/machinery/computer/bsa_control/ui_state(mob/user)
@@ -133,7 +135,8 @@
 	return cannon
 
 /obj/machinery/computer/bsa_control/Destroy()
-	cannon.control_unit = null
-	cannon = null
+	if(cannon)
+		cannon.control_unit = null
+		cannon = null
 	core = null
 	. = ..()

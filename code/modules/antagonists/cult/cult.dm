@@ -8,11 +8,12 @@
 	roundend_category = "cultists"
 	antagpanel_category = "Cult"
 	antag_moodlet = /datum/mood_event/cult
+	suicide_cry = "FOR NAR'SIE!!"
+	preview_outfit = /datum/outfit/cultist
 	var/datum/action/innate/cult/comm/communion = new
 	var/datum/action/innate/cult/mastervote/vote = new
 	var/datum/action/innate/cult/blood_magic/magic = new
 	job_rank = ROLE_CULTIST
-	antag_hud_type = ANTAG_HUD_CULT
 	antag_hud_name = "cult"
 	var/ignore_implant = FALSE
 	var/give_equipment = FALSE
@@ -67,6 +68,31 @@
 	if(cult_team.blood_target && cult_team.blood_target_image && current.client)
 		current.client.images += cult_team.blood_target_image
 
+	ADD_TRAIT(current, TRAIT_HEALS_FROM_CULT_PYLONS, CULT_TRAIT)
+
+/datum/antagonist/cult/on_removal()
+	REMOVE_TRAIT(owner.current, TRAIT_HEALS_FROM_CULT_PYLONS, CULT_TRAIT)
+
+	return ..()
+
+/datum/antagonist/cult/get_preview_icon()
+	var/icon/icon = render_preview_outfit(preview_outfit)
+
+	// The longsword is 64x64, but getFlatIcon crunches to 32x32.
+	// So I'm just going to add it in post, screw it.
+
+	// Center the dude, because item icon states start from the center.
+	// This makes the image 64x64.
+	icon.Crop(-15, -15, 48, 48)
+
+	var/obj/item/melee/cultblade/longsword = new
+	icon.Blend(icon(longsword.lefthand_file, longsword.inhand_icon_state), ICON_OVERLAY)
+	qdel(longsword)
+
+	// Move the guy back to the bottom left, 32x32.
+	icon.Crop(17, 17, 48, 48)
+
+	return finish_preview_icon(icon)
 
 /datum/antagonist/cult/proc/equip_cultist(metal=TRUE)
 	var/mob/living/carbon/H = owner.current
@@ -102,7 +128,6 @@
 	var/mob/living/current = owner.current
 	if(mob_override)
 		current = mob_override
-	add_antag_hud(antag_hud_type, antag_hud_name, current)
 	handle_clown_mutation(current, mob_override ? null : "Your training has allowed you to overcome your clownish nature, allowing you to wield weapons without harming yourself.")
 	current.faction |= "cult"
 	current.grant_language(/datum/language/narsie, TRUE, TRUE, LANGUAGE_CULTIST)
@@ -117,12 +142,13 @@
 		if(cult_team.cult_ascendent)
 			cult_team.ascend(current)
 
+	add_team_hud(current)
+
 /datum/antagonist/cult/remove_innate_effects(mob/living/mob_override)
 	. = ..()
 	var/mob/living/current = owner.current
 	if(mob_override)
 		current = mob_override
-	remove_antag_hud(antag_hud_type, current)
 	handle_clown_mutation(current, removing = FALSE)
 	current.faction -= "cult"
 	current.remove_language(/datum/language/narsie, TRUE, TRUE, LANGUAGE_CULTIST)
@@ -134,9 +160,14 @@
 		var/mob/living/carbon/human/H = current
 		H.eye_color = initial(H.eye_color)
 		H.dna.update_ui_block(DNA_EYE_COLOR_BLOCK)
-		REMOVE_TRAIT(H, CULT_EYES, CULT_TRAIT)
+		REMOVE_TRAIT(H, TRAIT_UNNATURAL_RED_GLOWY_EYES, CULT_TRAIT)
 		H.remove_overlay(HALO_LAYER)
 		H.update_body()
+
+/datum/antagonist/cult/on_mindshield(mob/implanter)
+	if(!silent)
+		to_chat(owner.current, span_warning("You feel something interfering with your mental conditioning, but you resist it!"))
+	return
 
 /datum/antagonist/cult/on_removal()
 	if(!silent)
@@ -173,13 +204,14 @@
 
 /datum/antagonist/cult/proc/admin_take_all(mob/admin)
 	var/mob/living/current = owner.current
-	for(var/o in current.GetAllContents())
+	for(var/o in current.get_all_contents())
 		if(istype(o, /obj/item/melee/cultblade/dagger) || istype(o, /obj/item/stack/sheet/runed_metal))
 			qdel(o)
 
 /datum/antagonist/cult/master
 	ignore_implant = TRUE
 	show_in_antagpanel = FALSE //Feel free to add this later
+	antag_hud_name = "cultmaster"
 	var/datum/action/innate/cult/master/finalreck/reckoning = new
 	var/datum/action/innate/cult/master/cultmark/bloodmark = new
 	var/datum/action/innate/cult/master/pulse/throwing = new
@@ -189,11 +221,6 @@
 	QDEL_NULL(bloodmark)
 	QDEL_NULL(throwing)
 	return ..()
-
-/datum/antagonist/cult/master/on_gain()
-	. = ..()
-	var/mob/living/current = owner.current
-	set_antag_hud(current, "cultmaster")
 
 /datum/antagonist/cult/master/greet()
 	to_chat(owner.current, "<span class='warningplain'><span class='cultlarge'>You are the cult's Master</span>. As the cult's Master, you have a unique title and loud voice when communicating, are capable of marking \
@@ -214,6 +241,7 @@
 		cult_team.rise(current)
 		if(cult_team.cult_ascendent)
 			cult_team.ascend(current)
+	add_team_hud(current, /datum/antagonist/cult)
 
 /datum/antagonist/cult/master/remove_innate_effects(mob/living/mob_override)
 	. = ..()
@@ -259,6 +287,7 @@
 				to_chat(B.current, span_cultlarge("<span class='warningplain'>The veil weakens as your cult grows, your eyes begin to glow...</span>"))
 				addtimer(CALLBACK(src, .proc/rise, B.current), 200)
 		cult_risen = TRUE
+		log_game("The blood cult has risen with [cultplayers] players.")
 
 	if(ratio > CULT_ASCENDENT && !cult_ascendent)
 		for(var/datum/mind/B in members)
@@ -267,14 +296,15 @@
 				to_chat(B.current, span_cultlarge("<span class='warningplain'>Your cult is ascendent and the red harvest approaches - you cannot hide your true nature for much longer!!</span>"))
 				addtimer(CALLBACK(src, .proc/ascend, B.current), 200)
 		cult_ascendent = TRUE
+		log_game("The blood cult has ascended with [cultplayers] players.")
 
 
 /datum/team/cult/proc/rise(cultist)
 	if(ishuman(cultist))
 		var/mob/living/carbon/human/H = cultist
-		H.eye_color = "f00"
+		H.eye_color = BLOODCULT_EYE
 		H.dna.update_ui_block(DNA_EYE_COLOR_BLOCK)
-		ADD_TRAIT(H, CULT_EYES, CULT_TRAIT)
+		ADD_TRAIT(H, TRAIT_UNNATURAL_RED_GLOWY_EYES, CULT_TRAIT)
 		H.update_body()
 
 /datum/team/cult/proc/ascend(cultist)
@@ -287,7 +317,7 @@
 		human.apply_overlay(HALO_LAYER)
 
 /datum/team/cult/proc/make_image(datum/objective/sacrifice/sac_objective)
-	var/datum/job/job_of_sacrifice = SSjob.GetJob(sac_objective.target.assigned_role)
+	var/datum/job/job_of_sacrifice = sac_objective.target.assigned_role
 	var/datum/preferences/prefs_of_sacrifice = sac_objective.target.current.client.prefs
 	var/icon/reshape = get_flat_human_icon(null, job_of_sacrifice, prefs_of_sacrifice, list(SOUTH))
 	reshape.Shift(SOUTH, 4)
@@ -309,7 +339,7 @@
 		for(var/mob/living/carbon/human/player in GLOB.player_list)
 			if(player.mind && !player.mind.has_antag_datum(/datum/antagonist/cult) && player.stat != DEAD)
 				target_candidates += player.mind
-	listclearnulls(target_candidates)
+	list_clear_nulls(target_candidates)
 	if(LAZYLEN(target_candidates))
 		target = pick(target_candidates)
 		update_explanation_text()
@@ -340,7 +370,7 @@
 
 /datum/objective/sacrifice/update_explanation_text()
 	if(target)
-		explanation_text = "Sacrifice [target], the [target.assigned_role] via invoking an Offer rune with [target.p_them()] on it and three acolytes around it."
+		explanation_text = "Sacrifice [target], the [target.assigned_role.title] via invoking an Offer rune with [target.p_them()] on it and three acolytes around it."
 	else
 		explanation_text = "The veil has already been weakened here, proceed to the final objective."
 
@@ -426,3 +456,19 @@
 	if(HAS_TRAIT(M, TRAIT_MINDSHIELD) || issilicon(M) || isbot(M) || isdrone(M) || !M.client)
 		return FALSE //can't convert machines, shielded, or braindead
 	return TRUE
+
+/datum/outfit/cultist
+	name = "Cultist (Preview only)"
+
+	uniform = /obj/item/clothing/under/color/black
+	suit = /obj/item/clothing/suit/hooded/cultrobes/alt
+	shoes = /obj/item/clothing/shoes/cult/alt
+	r_hand = /obj/item/melee/blood_magic/stun
+
+/datum/outfit/cultist/post_equip(mob/living/carbon/human/H, visualsOnly)
+	H.eye_color = BLOODCULT_EYE
+	H.update_body()
+
+	var/obj/item/clothing/suit/hooded/hooded = locate() in H
+	hooded.MakeHood() // This is usually created on Initialize, but we run before atoms
+	hooded.ToggleHood()

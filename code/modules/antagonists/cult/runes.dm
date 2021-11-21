@@ -284,11 +284,23 @@ structure_check() searches for nearby cultist structures required for the invoca
 	if(!C)
 		return
 
+	if(ispAI(sacrificial))
+		for(var/M in invokers)
+			to_chat(M, span_cultitalic("You don't think this is what Nar'Sie had in mind when She asked for blood sacrifices..."))
+		log_game("Offer rune failed - tried sacrificing pAI")
+		return FALSE
 
 	var/big_sac = FALSE
+	//SKYRAT ADDITION BEGIN -- SOULSTONE_cHANGES
+	if(HAS_TRAIT(sacrificial, TRAIT_SACRIFICED))
+		for(var/M in invokers)
+			to_chat(M, span_cultitalic("This one has already been sacrificed! Find another!"))
+		log_game("Offer rune failed - tried sacrificing already sacrificed target.")
+		return FALSE
+	//SKYRAT ADDITION END
 	if((((ishuman(sacrificial) || iscyborg(sacrificial)) && sacrificial.stat != DEAD) || C.cult_team.is_sacrifice_target(sacrificial.mind)) && invokers.len < 3)
 		for(var/M in invokers)
-			to_chat(M, "<span class='cult italic'>[sacrificial] is too greatly linked to the world! You need three acolytes!</span>")
+			to_chat(M, span_cultitalic("[sacrificial] is too greatly linked to the world! You need three acolytes!"))
 		log_game("Offer rune failed - not enough acolytes and target is living or sac target")
 		return FALSE
 	if(sacrificial.mind)
@@ -311,19 +323,34 @@ structure_check() searches for nearby cultist structures required for the invoca
 			else
 				to_chat(M, span_cultlarge("\"I accept this meager sacrifice.\""))
 
+	if(iscyborg(sacrificial))
+		var/construct_class = show_radial_menu(first_invoker, sacrificial, GLOB.construct_radial_images, require_near = TRUE, tooltips = TRUE)
+		if(QDELETED(sacrificial) || !construct_class)
+			return FALSE
+		sacrificial.grab_ghost()
+		make_new_construct_from_class(construct_class, THEME_CULT, sacrificial, first_invoker, TRUE, get_turf(src))
+		var/mob/living/silicon/robot/sacriborg = sacrificial
+		sacriborg.mmi = null
+		qdel(sacrificial)
+		return TRUE
 	var/obj/item/soulstone/stone = new /obj/item/soulstone(get_turf(src))
 	if(sacrificial.mind && !sacrificial.suiciding)
 		stone.invisibility = INVISIBILITY_MAXIMUM //so it's not picked up during transfer_soul()
-		stone.transfer_soul("FORCE", sacrificial, usr)
+		stone.capture_soul(sacrificial, first_invoker, TRUE)
 		stone.invisibility = 0
-
+	//SKYRAT EDIT BEGIN -- SOULSTONE_CHANGES
 	if(sacrificial)
-		if(iscyborg(sacrificial))
-			playsound(sacrificial, 'sound/magic/disable_tech.ogg', 100, TRUE)
-			sacrificial.dust() //To prevent the MMI from remaining
+		playsound(sacrificial, 'sound/magic/disintegrate.ogg', 100, TRUE)
+
+		if(iscarbon(sacrificial))
+			var/mob/living/carbon/victim = sacrificial
+			var/obj/item/bodypart/chest/victim_chest = victim.get_bodypart(BODY_ZONE_CHEST)
+			victim_chest.dismember()
+			victim.adjustFireLoss(300)
+			ADD_TRAIT(victim, TRAIT_SACRIFICED, "sacrificed")
 		else
-			playsound(sacrificial, 'sound/magic/disintegrate.ogg', 100, TRUE)
 			sacrificial.gib()
+	//SKYRAT EDIT END
 	return TRUE
 
 
@@ -417,7 +444,7 @@ structure_check() searches for nearby cultist structures required for the invoca
 			continue
 		if(!A.anchored)
 			movedsomething = TRUE
-			if(do_teleport(A, target, forceMove = TRUE, channel = TELEPORT_CHANNEL_CULT))
+			if(do_teleport(A, target, channel = TELEPORT_CHANNEL_CULT))
 				movesuccess = TRUE
 	if(movedsomething)
 		..()
@@ -483,7 +510,7 @@ structure_check() searches for nearby cultist structures required for the invoca
 
 /obj/effect/rune/narsie/Initialize(mapload, set_keyword)
 	. = ..()
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 
 /obj/effect/rune/narsie/conceal() //can't hide this, and you wouldn't want to
 	return
@@ -500,7 +527,7 @@ structure_check() searches for nearby cultist structures required for the invoca
 	if(!(place in summon_objective.summon_spots))
 		to_chat(user, span_cultlarge("The Geometer can only be summoned where the veil is weak - in [english_list(summon_objective.summon_spots)]!"))
 		return
-	if(locate(/obj/narsie) in GLOB.poi_list)
+	if(locate(/obj/narsie) in SSpoints_of_interest.narsies)
 		for(var/M in invokers)
 			to_chat(M, span_warning("Nar'Sie is already on this plane!"))
 		log_game("Nar'Sie rune failed - already summoned")
@@ -568,7 +595,7 @@ structure_check() searches for nearby cultist structures required for the invoca
 		mob_to_revive.grab_ghost()
 	if(!mob_to_revive.client || mob_to_revive.client.is_afk())
 		set waitfor = FALSE
-		var/list/mob/dead/observer/candidates = pollCandidatesForMob("Do you want to play as a [mob_to_revive.real_name], an inactive blood cultist?", ROLE_CULTIST, ROLE_CULTIST, 50, mob_to_revive)
+		var/list/mob/dead/observer/candidates = poll_candidates_for_mob("Do you want to play as a [mob_to_revive.real_name], an inactive blood cultist?", ROLE_CULTIST, ROLE_CULTIST, 5 SECONDS, mob_to_revive)
 		if(LAZYLEN(candidates))
 			var/mob/dead/observer/C = pick(candidates)
 			to_chat(mob_to_revive.mind, "Your physical form has been taken over by another soul due to your inactivity! Ahelp if you wish to regain your form.")
@@ -760,7 +787,7 @@ structure_check() searches for nearby cultist structures required for the invoca
 	var/ghost_limit = 3
 	var/ghosts = 0
 
-/obj/effect/rune/manifest/Initialize()
+/obj/effect/rune/manifest/Initialize(mapload)
 	. = ..()
 
 
@@ -930,7 +957,7 @@ structure_check() searches for nearby cultist structures required for the invoca
 			add_alt_appearance(/datum/atom_hud/alternate_appearance/basic/noncult, "human_apoc", A, NONE)
 			addtimer(CALLBACK(M,/atom/.proc/remove_alt_appearance,"human_apoc",TRUE), duration)
 			images += A
-			SEND_SOUND(M, pick(sound('sound/ambience/antag/bloodcult.ogg'),sound('sound/spookoween/ghost_whisper.ogg'),sound('sound/spookoween/ghosty_wind.ogg')))
+			SEND_SOUND(M, pick(sound('sound/ambience/antag/bloodcult.ogg'),sound('sound/voice/ghost_whisper.ogg'),sound('sound/misc/ghosty_wind.ogg')))
 		else
 			var/construct = pick("floater","artificer","behemoth")
 			var/image/B = image('icons/mob/mob.dmi',M,construct, ABOVE_MOB_LAYER)

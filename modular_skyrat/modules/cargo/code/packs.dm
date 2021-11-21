@@ -89,6 +89,25 @@
 	contains = list(/obj/item/defibrillator/compact)
 	crate_name = "compact defibrillator crate"
 
+/datum/supply_pack/medical/medigun
+	name = "CWM-479 Medigun"
+	desc = "Contains a single VeyMedical CWM-479 model medical gun; cells not included."
+	cost = CARGO_CRATE_VALUE * 30
+	access = ACCESS_MEDICAL
+	contains = list(/obj/item/storage/briefcase/medicalgunset/standard)
+	crate_name = "CWM-479 Medigun Crate"
+
+/datum/supply_pack/medical/medicells
+	name = "Medicell Replacement Crate"
+	desc = "Contains the tier I Medigun cells."
+	cost = CARGO_CRATE_VALUE * 5
+	access = ACCESS_MEDICAL
+	contains = list(/obj/item/weaponcell/medical/brute,
+					/obj/item/weaponcell/medical/burn,
+					/obj/item/weaponcell/medical/toxin,
+					/obj/item/weaponcell/medical)
+	crate_name = "Medicell Replacemnt Crate"
+
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Security ////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -100,16 +119,6 @@
 	access_view = ACCESS_SECURITY
 	contains = list(/obj/item/clothing/suit/space/hardsuit/security)
 	crate_name = "security hardsuit crate"
-
-/datum/supply_pack/security/baton_peacekeeper
-	name = "Batons Crate"
-	desc = "Arm the Civil Protection Forces with three batons. Requires Security access to open."
-	cost = CARGO_CRATE_VALUE * 2
-	access_view = ACCESS_SECURITY
-	contains = list(/obj/item/melee/classic_baton/peacekeeper,
-					/obj/item/melee/classic_baton/peacekeeper,
-					/obj/item/melee/classic_baton/peacekeeper)
-	crate_name = "baton crate"
 
 /datum/supply_pack/security/croonsurplus
 	name = "Croon Weapons Crate"
@@ -124,7 +133,30 @@
 					/obj/item/ammo_box/magazine/multi_sprite/croon)
 	crate_name = "unmarked weapons crate"
 	dangerous = TRUE
-	
+
+/datum/supply_pack/security/pepperballplus
+	name = "Pepperball Self-Defense Supply Crate"
+	desc = "Uneasy times, corporate security get lost during the transfer? Protect yourself.. somewhat."
+	cost = CARGO_CRATE_VALUE * 15
+	contraband = TRUE
+	contains = list(/obj/item/storage/box/gunset/pepperball,
+					/obj/item/storage/box/gunset/pepperball)
+	crate_name = "Pepperball Pistol Crate"
+	dangerous = TRUE
+
+/datum/supply_pack/security/wildcat
+	name = "CFA Wildcat Supply Crate"
+	desc = "Local police running low on equipment? Neighbor particularly loud in the early morning? This should help out. (Does not include weapons permits.)"
+	cost = CARGO_CRATE_VALUE * 55 // Bit cheaper then the next up, because it's not to good.
+	contains = list(/obj/item/gun/ballistic/automatic/cfa_wildcat,
+					/obj/item/gun/ballistic/automatic/cfa_wildcat,
+					/obj/item/ammo_box/magazine/multi_sprite/cfa_wildcat,
+					/obj/item/ammo_box/magazine/multi_sprite/cfa_wildcat,
+					/obj/item/ammo_box/magazine/multi_sprite/cfa_wildcat,
+					/obj/item/ammo_box/magazine/multi_sprite/cfa_wildcat)
+	crate_name = "CFA sponsored weapons crate"
+	dangerous = TRUE
+
 /datum/supply_pack/costumes_toys/randomised/improvised
 	name = "Improvised Weapons Crate"
 	desc = "Really hit rock bottom? Well, we've got a few things laying around from a sting-op on pirates we could lend you. (We'll expect these back.)" //they don't, actually.
@@ -232,6 +264,13 @@
 //////////////////////////// Misc Crates /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
+/datum/supply_pack/misc/medibeam //Moved to Misc so Medical can't order them for free through department consoles and break the economy.
+	name = "Medical Beam Gun"
+	desc = "Nanotrasen offers you, for an exorbatant fee, the ability to lease one of their ERTs favorite gadgets, the Medical Beam Gun"
+	cost = 1000000 //Special case, we don't want to make this in terms of crates because having bikes be a million credits is the whole meme.
+	contains = list(/obj/item/gun/medbeam)
+	crate_name = "Medical Beamgun Crate"
+
 /datum/supply_pack/misc/painting
 	name = "Advanced Art Supplies"
 	desc = "Bring out your artistic spirit with these advanced art supplies. Contains coloring supplies, cloth for canvas, and two easels to work with!"
@@ -296,14 +335,16 @@
 	crate_name = "dance machine crate"
 */
 
-/datum/supply_pack/misc/fuel_pellets
-	name = "Exploration Drone Fuel Crate"
-	desc = "Atmos on fire, and you still really wanna explore the stars? We've got you covered, for the fuel atleast."
-	cost = CARGO_CRATE_VALUE * 15
-	contains = list(/obj/item/fuel_pellet,
-					/obj/item/fuel_pellet,
-					/obj/item/fuel_pellet)
-	crate_name = "drone fuel crate"
+
+/datum/supply_pack/service/snowmobile
+	name = "Snowmobile kit"
+	desc = "trapped on a frigid wasteland? need to get around fast? purchase a refurbished snowmobile, with a FREE 10 microsecond warranty!"
+	cost = 1500 // 1000 points cheaper than ATV
+	contains = list(/obj/vehicle/ridden/atv/snowmobile = 1,
+			/obj/item/key/atv = 1,
+			/obj/item/clothing/mask/gas/explorer = 1)
+	crate_name = "Snowmobile kit"
+	crate_type = /obj/structure/closet/crate/large
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Food Stuff //////////////////////////////////////
@@ -465,7 +506,7 @@
 					/obj/item/storage/bag/quiver,
 					/obj/item/clothing/head/helmet/knight/red,
 					/obj/item/clothing/head/helmet/knight/blue,
-					/obj/item/food/bread)
+					/obj/item/food/bread/plain)
 	crate_name = "vintage crate"
 
 /datum/supply_pack/service/hydrohelper

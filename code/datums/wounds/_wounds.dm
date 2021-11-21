@@ -58,6 +58,8 @@
 	var/damage_mulitplier_penalty = 1
 	/// If set and this wound is applied to a leg, we take this many deciseconds extra per step on this leg
 	var/limp_slowdown
+	/// If this wound has a limp_slowdown and is applied to a leg, it has this chance to limp each step
+	var/limp_chance
 	/// How much we're contributing to this limb's bleed_rate
 	var/blood_flow
 
@@ -107,7 +109,7 @@
  * * smited- If this is a smite, we don't care about this wound for stat tracking purposes (not yet implemented)
  */
 /datum/wound/proc/apply_wound(obj/item/bodypart/L, silent = FALSE, datum/wound/old_wound = null, smited = FALSE)
-	if(!istype(L) || !L.owner || !(L.body_zone in viable_zones) || HAS_TRAIT(L.owner, TRAIT_NEVER_WOUNDED)) //SKYRAT EDIT
+	if(!istype(L) || !L.owner || !(L.body_zone in viable_zones) || !L.is_organic_limb() || HAS_TRAIT(L.owner, TRAIT_NEVER_WOUNDED))
 		qdel(src)
 		return
 

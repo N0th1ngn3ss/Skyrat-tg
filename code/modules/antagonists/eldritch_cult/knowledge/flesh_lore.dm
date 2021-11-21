@@ -14,7 +14,7 @@
 		/datum/eldritch_knowledge/base_void
 	)
 	next_knowledge = list(/datum/eldritch_knowledge/flesh_grasp)
-	required_atoms = list(/obj/item/kitchen/knife, /obj/effect/decal/cleanable/blood)
+	required_atoms = list(/obj/item/knife, /obj/effect/decal/cleanable/blood)
 	result_atoms = list(/obj/item/melee/sickly_blade/flesh)
 	cost = 1
 	route = PATH_FLESH
@@ -46,7 +46,7 @@
 	humie.grab_ghost()
 
 	if(!humie.mind || !humie.client)
-		var/list/mob/dead/observer/candidates = pollCandidatesForMob("Do you want to play as a [humie.real_name], a voiceless dead", ROLE_HERETIC, ROLE_HERETIC, 50,humie)
+		var/list/mob/dead/observer/candidates = poll_candidates_for_mob("Do you want to play as a [humie.real_name], a voiceless dead", ROLE_HERETIC, ROLE_HERETIC, 5 SECONDS, humie)
 		if(!LAZYLEN(candidates))
 			return
 		var/mob/dead/observer/chosen_candidate = pick(candidates)
@@ -126,7 +126,7 @@
 	if(!ishuman(target))
 		return
 	var/mob/living/carbon/human/human_target = target
-	var/datum/status_effect/eldritch/eldritch_effect = human_target.has_status_effect(/datum/status_effect/eldritch/rust) || human_target.has_status_effect(/datum/status_effect/eldritch/ash) || human_target.has_status_effect(/datum/status_effect/eldritch/flesh)  || human_target.has_status_effect(/datum/status_effect/eldritch/void)
+	var/datum/status_effect/eldritch/eldritch_effect = human_target.has_status_effect(/datum/status_effect/eldritch/rust) || human_target.has_status_effect(/datum/status_effect/eldritch/ash) || human_target.has_status_effect(/datum/status_effect/eldritch/flesh) || human_target.has_status_effect(/datum/status_effect/eldritch/void)
 	if(eldritch_effect)
 		eldritch_effect.on_effect()
 		if(iscarbon(target))
@@ -136,6 +136,8 @@
 			crit_wound.apply_wound(bodypart)
 
 /datum/eldritch_knowledge/flesh_grasp/proc/remove_ghoul(datum/source)
+	SIGNAL_HANDLER
+
 	var/mob/living/carbon/human/humie = source
 	spooky_scaries -= humie
 	humie.setMaxHealth(initial(humie.maxHealth))
@@ -199,7 +201,7 @@
 	mob_to_summon = /mob/living/simple_animal/hostile/eldritch/stalker
 	next_knowledge = list(
 		/datum/eldritch_knowledge/summon/ashy,
-		/datum/eldritch_knowledge/summon/rusty,
+		/datum/eldritch_knowledge/spell/blood_siphon,
 		/datum/eldritch_knowledge/final/flesh_final
 	)
 	route = PATH_FLESH
@@ -253,6 +255,6 @@
 	grasp_ghoul.ghoul_amt *= 3
 	var/datum/eldritch_knowledge/flesh_ghoul/better_ghoul = heretic_datum.get_knowledge(/datum/eldritch_knowledge/flesh_ghoul)
 	better_ghoul.max_amt *= 3
-	
+
 #undef GHOUL_MAX_HEALTH
 #undef MUTE_MAX_HEALTH

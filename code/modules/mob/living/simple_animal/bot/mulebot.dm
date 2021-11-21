@@ -18,6 +18,7 @@
 	animate_movement = FORWARD_STEPS
 	health = 50
 	maxHealth = 50
+	speed = 3
 	damage_coeff = list(BRUTE = 0.5, BURN = 0.7, TOX = 0, CLONE = 0, STAMINA = 0, OXY = 0)
 	combat_mode = TRUE //No swapping
 	buckle_lying = 0
@@ -128,8 +129,8 @@
 	return ..()
 
 /// returns true if the bot is fully powered.
-/mob/living/simple_animal/bot/mulebot/proc/has_power(bypass_open_check)
-	return (!open || bypass_open_check) && cell && cell.charge > 0 && (!wires.is_cut(WIRE_POWER1) && !wires.is_cut(WIRE_POWER2))
+/mob/living/simple_animal/bot/mulebot/proc/has_power()
+	return cell && cell.charge > 0 && (!wires.is_cut(WIRE_POWER1) && !wires.is_cut(WIRE_POWER2))
 
 
 /mob/living/simple_animal/bot/mulebot/proc/set_id(new_id)
@@ -146,10 +147,7 @@
 /mob/living/simple_animal/bot/mulebot/attackby(obj/item/I, mob/living/user, params)
 	if(I.tool_behaviour == TOOL_SCREWDRIVER)
 		. = ..()
-		if(open)
-			turn_off()
-		else
-			update_appearance() //this is also handled by turn_off(), so no need to call this twice.
+		update_appearance()
 	else if(istype(I, /obj/item/stock_parts/cell) && open)
 		if(cell)
 			to_chat(user, span_warning("[src] already has a power cell!"))
@@ -350,56 +348,6 @@
 		if("ejectpai")
 			ejectpairemote(user)
 
-// TODO: remove this; PDAs currently depend on it
-/mob/living/simple_animal/bot/mulebot/get_controls(mob/user)
-	var/ai = issilicon(user)
-	var/dat
-	dat += "<h3>Multiple Utility Load Effector Mk. V</h3>"
-	dat += "<b>ID:</b> [id]<BR>"
-	dat += "<b>Power:</b> [on ? "On" : "Off"]<BR>"
-	dat += "<h3>Status</h3>"
-	dat += "<div class='statusDisplay'>"
-	switch(mode)
-		if(BOT_IDLE)
-			dat += "<span class='good'>Ready</span>"
-		if(BOT_DELIVER)
-			dat += "<span class='good'>[mode_name[BOT_DELIVER]]</span>"
-		if(BOT_GO_HOME)
-			dat += "<span class='good'>[mode_name[BOT_GO_HOME]]</span>"
-		if(BOT_BLOCKED)
-			dat += "<span class='average'>[mode_name[BOT_BLOCKED]]</span>"
-		if(BOT_NAV,BOT_WAIT_FOR_NAV)
-			dat += "<span class='average'>[mode_name[BOT_NAV]]</span>"
-		if(BOT_NO_ROUTE)
-			dat += "<span class='bad'>[mode_name[BOT_NO_ROUTE]]</span>"
-	dat += "</div>"
-
-	var/load_message = get_load_name()
-	dat += "<b>Current Load:</b> <i>[load_message ? load_message : "None"]</i><BR>"
-	dat += "<b>Destination:</b> [!destination ? "<i>None</i>" : destination]<BR>"
-	dat += "<b>Power level:</b> [cell ? cell.percent() : 0]%"
-
-	if(locked && !ai && !isAdminGhostAI(user))
-		dat += "&nbsp;<br /><div class='notice'>Controls are locked</div><A href='byond://?src=[REF(src)];op=unlock'>Unlock Controls</A>"
-	else
-		dat += "&nbsp;<br /><div class='notice'>Controls are unlocked</div><A href='byond://?src=[REF(src)];op=lock'>Lock Controls</A><BR><BR>"
-
-		dat += "<A href='byond://?src=[REF(src)];op=power'>Toggle Power</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=stop'>Stop</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=go'>Proceed</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=home'>Return to Home</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=destination'>Set Destination</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=setid'>Set Bot ID</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=sethome'>Set Home</A><BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=autoret'>Toggle Auto Return Home</A> ([auto_return ? "On":"Off"])<BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=autopick'>Toggle Auto Pickup Crate</A> ([auto_pickup ? "On":"Off"])<BR>"
-		dat += "<A href='byond://?src=[REF(src)];op=report'>Toggle Delivery Reporting</A> ([report_delivery ? "On" : "Off"])<BR>"
-		if(load)
-			dat += "<A href='byond://?src=[REF(src)];op=unload'>Unload Now</A><BR>"
-		dat += "<div class='notice'>The maintenance hatch is closed.</div>"
-
-	return dat
-
 /mob/living/simple_animal/bot/mulebot/proc/buzz(type)
 	switch(type)
 		if(SIGH)
@@ -524,7 +472,7 @@
 
 /mob/living/simple_animal/bot/mulebot/call_bot()
 	..()
-	if(path && path.len)
+	if(path?.len)
 		target = ai_waypoint //Target is the end point of the path, the waypoint set by the AI.
 		destination = get_area_name(target, TRUE)
 		pathset = 1 //Indicates the AI's custom path is initialized.
@@ -557,6 +505,8 @@
 		turn_off()
 		return
 	if(mode == BOT_IDLE)
+		return
+	if(HAS_TRAIT(src, TRAIT_IMMOBILIZED))
 		return
 
 	var/speed = (wires.is_cut(WIRE_MOTOR1) ? 0 : 1) + (wires.is_cut(WIRE_MOTOR2) ? 0 : 2)
@@ -836,7 +786,7 @@
 	if(!on)
 		return COMPONENT_MOB_BOT_BLOCK_PRE_STEP
 
-	if((cell && (cell.charge < cell_move_power_usage)) || !has_power((client || paicard)))
+	if((cell && (cell.charge < cell_move_power_usage)) || !has_power())
 		turn_off()
 		return COMPONENT_MOB_BOT_BLOCK_PRE_STEP
 
@@ -926,4 +876,3 @@
 
 /obj/machinery/bot_core/mulebot
 	req_access = list(ACCESS_CARGO)
-

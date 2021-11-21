@@ -25,6 +25,8 @@
 	RegisterSignal(new_lift_platform, COMSIG_PARENT_QDELETING, .proc/remove_lift_platforms)
 
 /datum/lift_master/proc/remove_lift_platforms(obj/structure/industrial_lift/old_lift_platform)
+	SIGNAL_HANDLER
+
 	if(!(old_lift_platform in lift_platforms))
 		return
 	old_lift_platform.lift_master_datum = null
@@ -68,7 +70,7 @@
  * This is a SAFE proc, ensuring every part of the lift moves SANELY.
  * It also locks controls for the (miniscule) duration of the movement, so the elevator cannot be broken by spamming.
  */
-/datum/lift_master/proc/MoveLiftHorizontal(going, z)
+/datum/lift_master/proc/MoveLiftHorizontal(going, z, gliding_amount = 8)
 	var/max_x = 1
 	var/max_y = 1
 	var/min_x = world.maxx
@@ -91,12 +93,12 @@
 				//Go along the Y axis from max to min, from up to down
 				for(var/y in max_y to min_y step -1)
 					var/obj/structure/industrial_lift/lift_platform = locate(/obj/structure/industrial_lift, locate(x, y, z))
-					lift_platform?.travel(going)
+					lift_platform?.travel(going, gliding_amount)
 			else
 				//Go along the Y axis from min to max, from down to up
 				for(var/y in min_y to max_y)
 					var/obj/structure/industrial_lift/lift_platform = locate(/obj/structure/industrial_lift, locate(x, y, z))
-					lift_platform?.travel(going)
+					lift_platform?.travel(going, gliding_amount)
 	else
 		//Go along the X axis from max to min, from right to left
 		for(var/x in max_x to min_x step -1)
@@ -104,12 +106,12 @@
 				//Go along the Y axis from max to min, from up to down
 				for(var/y in max_y to min_y step -1)
 					var/obj/structure/industrial_lift/lift_platform = locate(/obj/structure/industrial_lift, locate(x, y, z))
-					lift_platform?.travel(going)
+					lift_platform?.travel(going, gliding_amount)
 			else
 				//Go along the Y axis from min to max, from down to up
 				for(var/y in min_y to max_y)
 					var/obj/structure/industrial_lift/lift_platform = locate(/obj/structure/industrial_lift, locate(x, y, z))
-					lift_platform?.travel(going)
+					lift_platform?.travel(going, gliding_amount)
 	set_controls(UNLOCKED)
 
 ///Check destination turfs
@@ -140,7 +142,7 @@ GLOBAL_LIST_EMPTY(lifts)
 	base_icon_state = "catwalk"
 	density = FALSE
 	anchored = TRUE
-	armor = list(MELEE = 50, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 80, ACID = 50)
+	armor = list(MELEE = 50, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, FIRE = 80, ACID = 50)
 	max_integrity = 50
 	layer = LATTICE_LAYER //under pipes
 	plane = FLOOR_PLANE
@@ -155,12 +157,9 @@ GLOBAL_LIST_EMPTY(lifts)
 	var/list/atom/movable/lift_load //things to move
 	var/datum/lift_master/lift_master_datum    //control from
 
-/obj/structure/industrial_lift/New()
-	GLOB.lifts.Add(src)
-	..()
-
 /obj/structure/industrial_lift/Initialize(mapload)
 	. = ..()
+	GLOB.lifts.Add(src)
 	var/static/list/loc_connections = list(
 		COMSIG_ATOM_EXITED =.proc/UncrossedRemoveItemFromLift,
 		COMSIG_ATOM_ENTERED = .proc/AddItemOnLift,
@@ -221,7 +220,7 @@ GLOBAL_LIST_EMPTY(lifts)
 			continue
 		. += neighbor
 
-/obj/structure/industrial_lift/proc/travel(going)
+/obj/structure/industrial_lift/proc/travel(going, gliding_amount = 8)
 	var/list/things2move = LAZYCOPY(lift_load)
 	var/turf/destination
 	if(!isturf(going))
@@ -236,7 +235,7 @@ GLOBAL_LIST_EMPTY(lifts)
 		for(var/mob/M in urange(8, src))
 			shake_camera(M, 2, 3)
 		playsound(C, 'sound/effects/meteorimpact.ogg', 100, TRUE)
-		
+
 	if(going == DOWN)
 		for(var/mob/living/crushed in destination.contents)
 			to_chat(crushed, span_userdanger("You are crushed by [src]!"))
@@ -252,7 +251,7 @@ GLOBAL_LIST_EMPTY(lifts)
 					visible_message("<span class='danger'>[src] smashes through [victimstructure]!</span>")
 					victimstructure.deconstruct(FALSE)
 				else
-					visible_message("<span class='danger'>[src] violently rams [victimstructure] out of the way!</span>") 
+					visible_message("<span class='danger'>[src] violently rams [victimstructure] out of the way!</span>")
 					victimstructure.anchored = FALSE
 					victimstructure.take_damage(rand(20,25))
 					victimstructure.throw_at(throw_target, 200, 4)
@@ -284,9 +283,13 @@ GLOBAL_LIST_EMPTY(lifts)
 
 			collided.throw_at()
 			//if going EAST, will turn to the NORTHEAST or SOUTHEAST and throw the ran over guy away
-			collided.throw_at(throw_target, 200, 4)
+			var/datum/callback/land_slam = new(collided, /mob/living/.proc/tram_slam_land)
+			collided.throw_at(throw_target, 200, 4, callback = land_slam)
+
+	set_glide_size(gliding_amount)
 	forceMove(destination)
 	for(var/atom/movable/thing as anything in things2move)
+		thing.set_glide_size(gliding_amount) //matches the glide size of the moving platform to stop them from jittering on it.
 		thing.forceMove(destination)
 
 /obj/structure/industrial_lift/proc/use(mob/living/user)
@@ -456,6 +459,10 @@ GLOBAL_DATUM(central_tram, /obj/structure/industrial_lift/tram/central)
 	SStramprocess.can_fire = TRUE
 	GLOB.central_tram = src
 
+/obj/structure/industrial_lift/tram/central/Destroy()
+	GLOB.central_tram = null
+	return ..()
+
 /obj/structure/industrial_lift/tram/LateInitialize()
 	. = ..()
 	find_our_location()
@@ -492,7 +499,7 @@ GLOBAL_DATUM(central_tram, /obj/structure/industrial_lift/tram/central)
 		return PROCESS_KILL
 	else
 		travel_distance--
-		lift_master_datum.MoveLiftHorizontal(travel_direction, z)
+		lift_master_datum.MoveLiftHorizontal(travel_direction, z, DELAY_TO_GLIDE_SIZE(SStramprocess.wait))
 
 /**
  * Handles moving the tram
@@ -518,7 +525,7 @@ GLOBAL_DATUM(central_tram, /obj/structure/industrial_lift/tram/central)
 		SEND_SIGNAL(src, COMSIG_TRAM_TRAVEL, from_where, to_where)
 		other_tram_part.set_travelling(TRUE)
 		other_tram_part.from_where = to_where
-	lift_master_datum.MoveLiftHorizontal(travel_direction, z)
+	lift_master_datum.MoveLiftHorizontal(travel_direction, z, DELAY_TO_GLIDE_SIZE(SStramprocess.wait))
 	travel_distance--
 
 	START_PROCESSING(SStramprocess, src)
@@ -545,7 +552,7 @@ GLOBAL_LIST_EMPTY(tram_landmarks)
 	///icons for the tgui console to list out for what is at this location
 	var/list/tgui_icons = list()
 
-/obj/effect/landmark/tram/Initialize()
+/obj/effect/landmark/tram/Initialize(mapload)
 	. = ..()
 	GLOB.tram_landmarks += src
 
@@ -557,12 +564,12 @@ GLOBAL_LIST_EMPTY(tram_landmarks)
 /obj/effect/landmark/tram/left_part
 	name = "West Wing"
 	destination_id = "left_part"
-	tgui_icons = list("Arrivals" = "plane-arrival", "Service" = "cocktail")
+	tgui_icons = list("Arrivals" = "plane-arrival", "Command" = "bullhorn", "Security" = "gavel")
 
 /obj/effect/landmark/tram/middle_part
 	name = "Central Wing"
 	destination_id = "middle_part"
-	tgui_icons = list("Command" = "bullhorn", "Security" = "gavel", "Medical" = "plus", "Engineering" = "wrench")
+	tgui_icons = list("Service" = "cocktail", "Medical" = "plus", "Engineering" = "wrench")
 
 /obj/effect/landmark/tram/right_part
 	name = "East Wing"

@@ -97,8 +97,8 @@
 		mob.unpixel_shift()
 	//SKYRAT EDIT ADDITION END
 
-	var/mob/living/L = mob  //Already checked for isliving earlier
-	if(L.incorporeal_move) //Move though walls
+	var/mob/living/L = mob //Already checked for isliving earlier
+	if(L.incorporeal_move && !is_secret_level(mob.z)) //Move though walls
 		Process_Incorpmove(direct)
 		return FALSE
 
@@ -241,7 +241,7 @@
 				if(target)
 					L.forceMove(target)
 					var/limit = 2//For only two trailing shadows.
-					for(var/turf/T in getline(mobloc, L.loc))
+					for(var/turf/T in get_line(mobloc, L.loc))
 						new /obj/effect/temp_visual/dir_setting/ninja/shadow(T, L.dir)
 						limit--
 						if(limit<=0)
@@ -255,8 +255,9 @@
 		if(INCORPOREAL_MOVE_JAUNT) //Incorporeal move, but blocked by holy-watered tiles and salt piles.
 			var/turf/open/floor/stepTurf = get_step(L, direct)
 			if(stepTurf)
-				for(var/obj/effect/decal/cleanable/food/salt/S in stepTurf)
-					to_chat(L, span_warning("[S] bars your passage!"))
+				var/obj/effect/decal/cleanable/food/salt/salt = locate() in stepTurf
+				if(salt)
+					to_chat(L, span_warning("[salt] bars your passage!"))
 					if(isrevenant(L))
 						var/mob/living/simple_animal/revenant/R = L
 						R.reveal(20)
@@ -265,7 +266,7 @@
 				if(stepTurf.turf_flags & NOJAUNT)
 					to_chat(L, span_warning("Some strange aura is blocking the way."))
 					return
-				if (locate(/obj/effect/blessing, stepTurf))
+				if(locate(/obj/effect/blessing) in stepTurf)
 					to_chat(L, span_warning("Holy energies block your path!"))
 					return
 
@@ -340,6 +341,7 @@
 
 /// Called when this mob slips over, override as needed
 /mob/proc/slip(knockdown_amount, obj/O, lube, paralyze, force_drop)
+	mind?.add_memory(MEMORY_SLIPPED, list(DETAIL_WHAT_BY = O, DETAIL_PROTAGONIST = src), story_value = STORY_VALUE_OKAY)
 	return
 
 /// Update the gravity status of this mob
@@ -527,6 +529,11 @@
 	if(zMove(DOWN, TRUE, ventcrawling_mob))
 		to_chat(src, span_notice("You move down."))
 
+/mob/can_zFall(turf/source, levels, turf/target, direction)
+	if(buckled)
+		return buckled.can_zFall(source, levels, target, direction)
+	return ..()
+
 ///Move a mob between z levels, if it's valid to move z's on this turf
 /mob/proc/zMove(dir, feedback = FALSE, ventcrawling = FALSE)
 	if(dir != UP && dir != DOWN)
@@ -545,7 +552,7 @@
 			to_chat(src, span_warning("You couldn't move there!"))
 		return FALSE
 	if(!ventcrawling) //let this be handled in atmosmachinery.dm
-		forceMove(target)
+		return Move(target)
 	else
 		var/obj/machinery/atmospherics/pipe = loc
 		pipe.relaymove(src, dir)
@@ -554,3 +561,9 @@
 /// Can this mob move between z levels
 /mob/proc/canZMove(direction, turf/target)
 	return FALSE
+
+/mob/abstract_move(atom/destination)
+	var/turf/new_turf = get_turf(destination)
+	if(is_secret_level(new_turf.z) && !client?.holder)
+		return
+	return ..()

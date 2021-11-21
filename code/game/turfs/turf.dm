@@ -8,7 +8,11 @@ GLOBAL_LIST_EMPTY(station_turfs)
 
 	/// Turf bitflags, see code/__DEFINES/flags.dm
 	var/turf_flags = NONE
-	var/intact = 1
+
+	/// If there's a tile over a basic floor that can be ripped out
+	var/overfloor_placed = FALSE
+	/// How accessible underfloor pieces such as wires, pipes, etc are on this turf. Can be HIDDEN, VISIBLE, or INTERACTABLE.
+	var/underfloor_accessibility = UNDERFLOOR_HIDDEN
 
 	// baseturfs can be either a list or a single turf type.
 	// In class definition like here it should always be a single type.
@@ -42,7 +46,8 @@ GLOBAL_LIST_EMPTY(station_turfs)
 	///Lumcount added by sources other than lighting datum objects, such as the overlay lighting component.
 	var/dynamic_lumcount = 0
 
-	var/dynamic_lighting = TRUE
+	///Bool, whether this turf will always be illuminated no matter what area it is in
+	var/always_lit = FALSE
 
 	var/tmp/lighting_corners_initialised = FALSE
 
@@ -105,12 +110,11 @@ GLOBAL_LIST_EMPTY(station_turfs)
 
 	visibilityChanged()
 
-	for(var/atom/movable/AM in src)
-		Entered(AM)
+	for(var/atom/movable/content as anything in src)
+		Entered(content, null)
 
-	var/area/A = loc
-	if(!IS_DYNAMIC_LIGHTING(src) && IS_DYNAMIC_LIGHTING(A))
-		add_overlay(/obj/effect/fullbright)
+	if(always_lit)
+		add_overlay(GLOB.fullbright_overlay)
 
 	if(requires_activation)
 		CALCULATE_ADJACENT_TURFS(src, KILL_EXCITED)
@@ -132,6 +136,14 @@ GLOBAL_LIST_EMPTY(station_turfs)
 	set_custom_materials(custom_materials)
 
 	ComponentInitialize()
+
+	if(uses_integrity)
+		atom_integrity = max_integrity
+
+		if (islist(armor))
+			armor = getArmor(arglist(armor))
+		else if (!armor)
+			armor = getArmor()
 
 	return INITIALIZE_HINT_NORMAL
 
@@ -209,6 +221,20 @@ GLOBAL_LIST_EMPTY(station_turfs)
 		if(movable_content.density && (!exclude_mobs || !ismob(movable_content)))
 			if(source_atom && movable_content.CanPass(source_atom, get_dir(src, source_atom)))
 				continue
+			return TRUE
+	return FALSE
+
+/**
+ * Checks whether the specified turf is blocked by something dense inside it, but ignores anything with the climbable trait
+ *
+ * Works similar to is_blocked_turf(), but ignores climbables and has less options. Primarily added for jaunting checks
+ */
+/turf/proc/is_blocked_turf_ignore_climbable()
+	if(density)
+		return TRUE
+
+	for(var/atom/movable/atom_content as anything in contents)
+		if(atom_content.density && !(atom_content.flags_1 & ON_BORDER_1) && !HAS_TRAIT(atom_content, TRAIT_CLIMBABLE))
 			return TRUE
 	return FALSE
 
@@ -329,7 +355,7 @@ GLOBAL_LIST_EMPTY(station_turfs)
 	return TRUE
 
 
-/turf/open/Entered(atom/movable/arrived, direction)
+/turf/open/Entered(atom/movable/arrived, atom/old_loc, list/atom/old_locs)
 	..()
 	//melting
 	if(isobj(arrived) && air && air.temperature > T0C)
@@ -391,7 +417,7 @@ GLOBAL_LIST_EMPTY(station_turfs)
 /turf/proc/levelupdate()
 	for(var/obj/O in src)
 		if(O.flags_1 & INITIALIZED_1)
-			SEND_SIGNAL(O, COMSIG_OBJ_HIDE, intact)
+			SEND_SIGNAL(O, COMSIG_OBJ_HIDE, underfloor_accessibility < UNDERFLOOR_VISIBLE)
 
 // override for space turfs, since they should never hide anything
 /turf/open/space/levelupdate()
@@ -442,7 +468,7 @@ GLOBAL_LIST_EMPTY(station_turfs)
 ////////////////////////////////////////////////////
 
 /turf/singularity_act()
-	if(intact)
+	if(underfloor_accessibility < UNDERFLOOR_INTERACTABLE)
 		for(var/obj/O in contents) //this is for deleting things like wires contained in the turf
 			if(HAS_TRAIT(O, TRAIT_T_RAY_VISIBLE))
 				O.singularity_act()
@@ -453,7 +479,7 @@ GLOBAL_LIST_EMPTY(station_turfs)
 	return TRUE
 
 /turf/proc/can_lay_cable()
-	return can_have_cabling() & !intact
+	return can_have_cabling() && underfloor_accessibility >= UNDERFLOOR_INTERACTABLE
 
 /turf/proc/visibilityChanged()
 	GLOB.cameranet.updateVisibility(src)
@@ -502,6 +528,8 @@ GLOBAL_LIST_EMPTY(station_turfs)
 
 /turf/proc/add_blueprints(atom/movable/AM)
 	var/image/I = new
+	I.plane = GAME_PLANE
+	I.layer = OBJ_LAYER
 	I.appearance = AM.appearance
 	I.appearance_flags = RESET_COLOR|RESET_ALPHA|RESET_TRANSFORM
 	I.loc = src
@@ -510,7 +538,7 @@ GLOBAL_LIST_EMPTY(station_turfs)
 	LAZYADD(blueprint_data, I)
 
 /turf/proc/add_blueprints_preround(atom/movable/AM)
-	if(!SSticker.HasRoundStarted())
+	if(!SSicon_smooth.initialized)
 		if(AM.layer == WIRE_LAYER) //wires connect to adjacent positions after its parent init, meaning we need to wait (in this case, until smoothing) to take its image
 			SSicon_smooth.blueprint_queue += AM
 		else
@@ -523,10 +551,11 @@ GLOBAL_LIST_EMPTY(station_turfs)
 	. = ..()
 	if((acidpwr <= 0) || (acid_volume <= 0))
 		return FALSE
-
+	if(QDELETED(src)) //skyrat edit: fix createanddestroy
+		return FALSE
 	AddComponent(/datum/component/acid, acidpwr, acid_volume)
 	for(var/obj/O in src)
-		if(intact && HAS_TRAIT(O, TRAIT_T_RAY_VISIBLE))
+		if(underfloor_accessibility < UNDERFLOOR_INTERACTABLE && HAS_TRAIT(O, TRAIT_T_RAY_VISIBLE))
 			continue
 
 		O.acid_act(acidpwr, acid_volume)
@@ -538,13 +567,9 @@ GLOBAL_LIST_EMPTY(station_turfs)
 
 /turf/handle_fall(mob/faller)
 	SEND_SIGNAL(src, COMSIG_TURF_MOB_FALL, faller) //SKYRAT EDIT ADDITION
-	//SKYRAT EDIT REMOVAL BEGIN - SOUNDS - moved to other place, to make you thud when you voluntairly rest
-	/* SKYRAT EDIT REMOVAL BEGIN
 	if(has_gravity(src))
 		playsound(src, "bodyfall", 50, TRUE)
-	//faller.drop_all_held_items()
-	*/
-	//SKYRAT EDIT END
+	faller.drop_all_held_items()
 
 /turf/proc/photograph(limit=20)
 	var/image/I = new()
@@ -577,10 +602,6 @@ GLOBAL_LIST_EMPTY(station_turfs)
 		V.icon_state = "vomitpurp_[pick(1,4)]"
 	else if (toxvomit == VOMIT_TOXIC)
 		V.icon_state = "vomittox_[pick(1,4)]"
-	else if (toxvomit == VOMIT_NANITE)
-		V.name = "metallic slurry"
-		V.desc = "A puddle of metallic slurry that looks vaguely like very fine sand. It almost seems like it's moving..."
-		V.icon_state = "vomitnanite_[pick(1,4)]"
 	if (purge_ratio && iscarbon(M))
 		clear_reagents_to_vomit_pool(M, V, purge_ratio)
 

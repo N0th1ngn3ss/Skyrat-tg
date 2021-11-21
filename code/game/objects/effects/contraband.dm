@@ -69,7 +69,7 @@
 	var/poster_item_icon_state = "rolled_poster"
 	var/poster_item_type = /obj/item/poster
 
-/obj/structure/sign/poster/Initialize()
+/obj/structure/sign/poster/Initialize(mapload)
 	. = ..()
 	if(random_basetype)
 		randomise(random_basetype)
@@ -437,6 +437,11 @@
 	name = "The Big Gas Giant Truth"
 	desc = "Don't believe everything you see on a poster, patriots. All the lizards at central command don't want to answer this SIMPLE QUESTION: WHERE IS THE GAS MINER MINING FROM, CENTCOM?"
 	icon_state = "poster48"
+
+/obj/structure/sign/poster/contraband/got_wood
+	name = "Got Wood?"
+	desc = "A grimy old advert for a seedy lumber company. \"You got a friend in me.\" is scrawled in the corner."
+	icon_state = "poster49"
 
 /obj/structure/sign/poster/official
 	poster_item_name = "motivational poster"

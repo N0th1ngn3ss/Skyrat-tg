@@ -61,9 +61,40 @@
 // CAPTAIN
 
 /obj/item/clothing/suit/armor/captain/parade/female
-	name = "captain's female parade jacket"
+	name = "captain's female formal jacket"
 	desc = "A captain's luxury-wear, for special occasions."
 	icon = 'modular_skyrat/master_files/icons/obj/clothing/suits.dmi'
 	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
 	icon_state = "cap_parade_fem"
 	inhand_icon_state = "by_suit"
+
+// HEAD OF PERSONNEL
+/obj/item/clothing/suit/toggle/hop_parade
+	name = "head of personnel's parade jacket"
+	desc = "A luxurious deep blue jacket for the Head of Personnel, woven with a red trim. It smells of bureaucracy."
+	icon = 'modular_skyrat/master_files/icons/obj/clothing/suits.dmi'
+	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
+	icon_state = "hopformal"
+	inhand_icon_state = "capspacesuit"
+	body_parts_covered = CHEST|GROIN|ARMS
+	cold_protection = CHEST|GROIN|ARMS
+	heat_protection = CHEST|GROIN|ARMS
+
+/obj/item/clothing/suit/hooded/wintercoat/hop
+	name = "head of personnel's winter coat"
+	desc = "A long cozy winter coat, covered in thick fur. The breast features a proud yellow chevron, reminding everyone that you're the second banana. Someone at CC most really like you, huh?"
+	icon = 'modular_skyrat/master_files/icons/obj/clothing/suits.dmi'
+	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
+	obj_flags = UNIQUE_RENAME
+	unique_reskin = list("Formal" = "coathop_formal",
+						"Classic" = "coathop_classic"
+						)
+
+/obj/item/clothing/head/hooded/winterhood/hop
+	icon = 'modular_skyrat/master_files/icons/obj/clothing/hats.dmi'
+	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/head.dmi'
+	icon_state = "winterhood_hop"
+	obj_flags = UNIQUE_RENAME
+	unique_reskin = list("Formal" = "winterhood_hop",
+						"Classic" = "hood_hop"
+						)

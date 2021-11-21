@@ -30,7 +30,20 @@
 		"External" = /obj/machinery/door/airlock/external,
 		"External Maintenance"= /obj/machinery/door/airlock/maintenance/external,
 		"Virology" = /obj/machinery/door/airlock/virology,
-		"Standard" = /obj/machinery/door/airlock
+//SKYRAT EDIT ADDITION//
+		"Standard" = /obj/machinery/door/airlock,
+		"Corporate" = /obj/machinery/door/airlock/corporate,
+		"Bathroom" = /obj/machinery/door/airlock/bathroom,
+		"Psychologist" = /obj/machinery/door/airlock/psych,
+		"Asylum" = /obj/machinery/door/airlock/asylum,
+		"Captain" = /obj/machinery/door/airlock/captain,
+		"Head of Personnel" = /obj/machinery/door/airlock/hop,
+		"Head of Security" = /obj/machinery/door/airlock/hos,
+		"Chief Medical Officer" = /obj/machinery/door/airlock/cmo,
+		"Chief Engineer" = /obj/machinery/door/airlock/ce,
+		"Research Director" = /obj/machinery/door/airlock/rd,
+		"Quartermaster" = /obj/machinery/door/airlock/qm
+//SKYRAT EDIT ADDITION END
 	)
 
 	power_use_amount = POWER_CELL_USE_HIGH
@@ -61,7 +74,7 @@
 	var/obj/item/organ/lungs/L = user.getorganslot(ORGAN_SLOT_LUNGS)
 
 	if(can_use(user) && L)
-		user.visible_message("<span class='suicide'>[user] is inhaling toner from [src]! It looks like [user.p_theyre()] trying to commit suicide!</span>")
+		user.visible_message(span_suicide("[user] is inhaling toner from [src]! It looks like [user.p_theyre()] trying to commit suicide!"))
 		use(user)
 
 		// Once you've inhaled the toner, you throw up your lungs
@@ -87,20 +100,20 @@
 
 		// TODO maybe add some colorful vomit?
 
-		user.visible_message("<span class='suicide'>[user] vomits out [user.p_their()] [L]!</span>")
+		user.visible_message(span_suicide("[user] vomits out [user.p_their()] [L]!"))
 		playsound(user.loc, 'sound/effects/splat.ogg', 50, TRUE)
 
 		L.forceMove(T)
 
 		return (TOXLOSS|OXYLOSS)
 	else if(can_use(user) && !L)
-		user.visible_message("<span class='suicide'>[user] is spraying toner on [user.p_them()]self from [src]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
+		user.visible_message(span_suicide("[user] is spraying toner on [user.p_them()]self from [src]! It looks like [user.p_theyre()] trying to commit suicide."))
 		user.reagents.add_reagent(/datum/reagent/colorful_reagent, 1)
 		user.reagents.expose(user, TOUCH, 1)
 		return TOXLOSS
 
 	else
-		user.visible_message("<span class='suicide'>[user] is trying to inhale toner from [src]! It might be a suicide attempt if [src] had any toner.</span>")
+		user.visible_message(span_suicide("[user] is trying to inhale toner from [src]! It might be a suicide attempt if [src] had any toner."))
 		return SHAME
 
 /obj/item/airlock_painter/decal
@@ -131,10 +144,10 @@
 	. = ..()
 	var/turf/open/floor/F = target
 	if(!proximity)
-		to_chat(user, "<span class='notice'>You need to get closer!</span>")
+		to_chat(user, span_notice("You need to get closer!"))
 		return
 	if(use_paint(user) && isturf(F))
-		F.AddElement(/datum/element/decal, 'icons/turf/decals.dmi', stored_decal_total, stored_dir, CLEAN_TYPE_PAINT, color, null, null, alpha)
+		F.AddElement(/datum/element/decal, 'icons/turf/decals.dmi', stored_decal_total, stored_dir, null, null, alpha, color, null, CLEAN_TYPE_PAINT, null)
 
 /obj/item/airlock_painter/decal/AltClick(mob/user)
 	. = ..()

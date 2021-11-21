@@ -56,7 +56,7 @@
 			charge = R.cell ? round(R.cell.percent()) : null,
 			module = R.model ? "[R.model.name] Model" : "No Model Detected",
 			synchronization = R.connected_ai,
-			emagged =  R.emagged,
+			emagged = R.emagged,
 			ref = REF(R)
 		)
 		data["cyborgs"] += list(cyborg_data)
@@ -86,12 +86,7 @@
 			if(allowed(usr))
 				var/mob/living/silicon/robot/R = locate(params["ref"]) in GLOB.silicon_mobs
 				if(can_control(usr, R) && !..())
-					var/turf/T = get_turf(R)
-					message_admins(span_notice("[ADMIN_LOOKUPFLW(usr)] detonated [key_name_admin(R, R.client)] at [ADMIN_VERBOSEJMP(T)]!"))
-					log_game("[span_notice("[key_name(usr)] detonated [key_name(R)]!")]")
-					if(R.connected_ai)
-						to_chat(R.connected_ai, "<br><br>[span_alert("ALERT - Cyborg detonation detected: [R.name]")]<br>")
-					R.self_destruct()
+					R.self_destruct(usr)
 			else
 				to_chat(usr, span_danger("Access Denied."))
 		if("stopbot")
@@ -100,6 +95,7 @@
 				if(can_control(usr, R) && !..())
 					message_admins(span_notice("[ADMIN_LOOKUPFLW(usr)] [!R.lockcharge ? "locked down" : "released"] [ADMIN_LOOKUPFLW(R)]!"))
 					log_game("[key_name(usr)] [!R.lockcharge ? "locked down" : "released"] [key_name(R)]!")
+					log_combat(usr, R, "[!R.lockcharge ? "locked down" : "released"] cyborg")
 					R.SetLockdown(!R.lockcharge)
 					to_chat(R, !R.lockcharge ? span_notice("Your lockdown has been lifted!") : span_alert("You have been locked down!"))
 					if(R.connected_ai)

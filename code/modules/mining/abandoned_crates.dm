@@ -16,11 +16,11 @@
 	// Stop people from "diving into" the crate accidentally, and then detonating it.
 	divable = FALSE
 
-/obj/structure/closet/crate/secure/loot/Initialize()
+/obj/structure/closet/crate/secure/loot/Initialize(mapload)
 	. = ..()
 	var/list/digits = list("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 	code = ""
-	for(var/i = 0, i < codelen, i++)
+	for(var/i in 1 to codelen)
 		var/dig = pick(digits)
 		code += dig
 		digits -= dig  //there are never matching digits in the answer
@@ -38,8 +38,8 @@
 			for(var/i = 1, i <= length_input, i += length(char)) //put the guess into a list
 				char = input[i]
 				sanitised += text2num(char)
-			for(var/i = 1, i <= length(sanitised) - 1, i++) //compare each digit in the guess to all those following it
-				for(var/j = i + 1, j <= length(sanitised), j++)
+			for(var/i in 1 to length(sanitised) - 1) //compare each digit in the guess to all those following it
+				for(var/j in i + 1 to length(sanitised))
 					if(sanitised[i] == sanitised[j])
 						sanitycheck = FALSE //if a digit is repeated, reject the input
 			if(input == code)
@@ -150,7 +150,7 @@
 		if(46 to 50)
 			new /obj/item/storage/box/syndie_kit/chameleon/broken
 		if(51 to 52) // 2% chance
-			new /obj/item/melee/classic_baton(src)
+			new /obj/item/melee/baton(src)
 		if(53 to 54)
 			new /obj/item/toy/balloon/corgi(src)
 		if(55 to 56)
@@ -196,12 +196,12 @@
 		if(88)
 			new /obj/item/reagent_containers/food/drinks/bottle/lizardwine(src)
 		if(89)
-			new /obj/item/melee/transforming/energy/sword/bananium(src)
+			new /obj/item/melee/energy/sword/bananium(src)
 		if(90)
 			new /obj/item/dnainjector/wackymut(src)
 		if(91)
 			for(var/i in 1 to 30)
-				new /mob/living/simple_animal/hostile/cockroach(src)
+				new /mob/living/basic/cockroach(src)
 		if(92)
 			new /obj/item/katana(src)
 		if(93)

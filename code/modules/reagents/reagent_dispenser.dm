@@ -23,7 +23,7 @@
 
 /obj/structure/reagent_dispensers/take_damage(damage_amount, damage_type = BRUTE, damage_flag = 0, sound_effect = 1, attack_dir)
 	. = ..()
-	if(. && obj_integrity > 0)
+	if(. && atom_integrity > 0)
 		if(tank_volume && (damage_flag == BULLET || damage_flag == LASER))
 			//SKYRAT EDIT CHANGE
 			var/guaranteed_violent = (damage_flag == BULLET || damage_flag == LASER)
@@ -47,7 +47,7 @@
 	else
 		return ..()
 
-/obj/structure/reagent_dispensers/Initialize()
+/obj/structure/reagent_dispensers/Initialize(mapload)
 	create_reagents(tank_volume, DRAINABLE | AMOUNT_VISIBLE)
 	if(reagent_id)
 		reagents.add_reagent(reagent_id, tank_volume)
@@ -161,23 +161,9 @@
 	density = FALSE
 	reagent_id = /datum/reagent/consumable/condensedcapsaicin
 
-/obj/structure/reagent_dispensers/peppertank/directional/north
-	dir = SOUTH
-	pixel_y = 30
+MAPPING_DIRECTIONAL_HELPERS(/obj/structure/reagent_dispensers/peppertank, 30)
 
-/obj/structure/reagent_dispensers/peppertank/directional/south
-	dir = NORTH
-	pixel_y = -30
-
-/obj/structure/reagent_dispensers/peppertank/directional/east
-	dir = WEST
-	pixel_x = 30
-
-/obj/structure/reagent_dispensers/peppertank/directional/west
-	dir = EAST
-	pixel_x = -30
-
-/obj/structure/reagent_dispensers/peppertank/Initialize()
+/obj/structure/reagent_dispensers/peppertank/Initialize(mapload)
 	. = ..()
 	if(prob(1))
 		desc = "IT'S PEPPER TIME, BITCH!"
@@ -232,21 +218,7 @@
 	density = FALSE
 	reagent_id = /datum/reagent/consumable/virus_food
 
-/obj/structure/reagent_dispensers/virusfood/directional/north
-	dir = SOUTH
-	pixel_y = 30
-
-/obj/structure/reagent_dispensers/virusfood/directional/south
-	dir = NORTH
-	pixel_y = -30
-
-/obj/structure/reagent_dispensers/virusfood/directional/east
-	dir = WEST
-	pixel_x = 30
-
-/obj/structure/reagent_dispensers/virusfood/directional/west
-	dir = EAST
-	pixel_x = -30
+MAPPING_DIRECTIONAL_HELPERS(/obj/structure/reagent_dispensers/virusfood, 30)
 
 /obj/structure/reagent_dispensers/cooking_oil
 	name = "vat of cooking oil"

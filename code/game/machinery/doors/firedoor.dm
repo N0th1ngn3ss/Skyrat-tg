@@ -17,16 +17,16 @@
 	explosion_block = 1
 	safe = FALSE
 	layer = BELOW_OPEN_DOOR_LAYER
-	closingLayer = BELOW_OPEN_DOOR_LAYER //SKYRAT EDIT CHANGE - AESTHETICS - ORIGINAL: CLOSED_FIREDOOR_LAYER
+	closingLayer = CLOSED_FIREDOOR_LAYER
 	assemblytype = /obj/structure/firelock_frame
-	armor = list(MELEE = 10, BULLET = 30, LASER = 20, ENERGY = 20, BOMB = 30, BIO = 100, RAD = 100, FIRE = 95, ACID = 70)
+	armor = list(MELEE = 10, BULLET = 30, LASER = 20, ENERGY = 20, BOMB = 30, BIO = 100, FIRE = 95, ACID = 70)
 	interaction_flags_machine = INTERACT_MACHINE_WIRES_IF_OPEN | INTERACT_MACHINE_ALLOW_SILICON | INTERACT_MACHINE_OPEN_SILICON | INTERACT_MACHINE_REQUIRES_SILICON | INTERACT_MACHINE_OPEN
 	var/nextstate = null
 	var/boltslocked = TRUE
 	var/list/affecting_areas
 	var/being_held_open = FALSE
 
-/obj/machinery/door/firedoor/Initialize()
+/obj/machinery/door/firedoor/Initialize(mapload)
 	. = ..()
 	CalculateAffectingAreas()
 
@@ -37,26 +37,28 @@
 	else if(!welded)
 		. += span_notice("It is closed, but could be <b>pried</b> open.")
 		. += span_notice("Hold the firelock temporarily open by prying it with <i>left-click</i> and standing next to it.")
-		. += span_notice("Prying by <i>right-clicking</i> the firelock will open it permanently.")
+		//. += span_notice("Prying by <i>right-clicking</i> the firelock will open it permanently.") SKYRAT EDIT REMOVAL
 		. += span_notice("Deconstruction would require it to be <b>welded</b> shut.")
 	else if(boltslocked)
 		. += span_notice("It is <i>welded</i> shut. The floor bolts have been locked by <b>screws</b>.")
 	else
 		. += span_notice("The bolt locks have been <i>unscrewed</i>, but the bolts themselves are still <b>wrenched</b> to the floor.")
 
+/* //SKYRAT EDIT REMOVAL BEGIN
 /obj/machinery/door/firedoor/proc/CalculateAffectingAreas()
 	remove_from_areas()
 	affecting_areas = get_adjacent_open_areas(src) | get_area(src)
 	for(var/I in affecting_areas)
 		var/area/A = I
 		LAZYADD(A.firedoors, src)
+*/ //SKYRAT EDIT END
 
 /obj/machinery/door/firedoor/closed
 	icon_state = "door_closed"
 	density = TRUE
 
+/* //SKYRAT EDIT REMOVAL BEGIN
 //see also turf/AfterChange for adjacency shennanigans
-
 /obj/machinery/door/firedoor/proc/remove_from_areas()
 	if(affecting_areas)
 		for(var/I in affecting_areas)
@@ -67,6 +69,7 @@
 	remove_from_areas()
 	affecting_areas.Cut()
 	return ..()
+*/ //SKYRAT EDIT REMOVAL END
 
 /obj/machinery/door/firedoor/Bumped(atom/movable/AM)
 	if(panel_open || operating)
@@ -121,7 +124,7 @@
 			return
 	return ..()
 
-/obj/machinery/door/firedoor/try_to_activate_door(mob/user)
+/obj/machinery/door/firedoor/try_to_activate_door(mob/user, access_bypass = FALSE)
 	return
 
 /obj/machinery/door/firedoor/try_to_weld(obj/item/weldingtool/W, mob/user)
@@ -204,9 +207,11 @@
 		if("closing")
 			flick("door_closing", src)
 
+/*SKYRAT EDIT REMOVAL
 /obj/machinery/door/firedoor/update_icon_state()
 	. = ..()
 	icon_state = "[base_icon_state]_[density ? "closed" : "open"]"
+*/
 
 /obj/machinery/door/firedoor/update_overlays()
 	. = ..()
@@ -255,15 +260,13 @@
 	icon = 'icons/obj/doors/edge_Doorfire.dmi'
 	can_crush = FALSE
 	flags_1 = ON_BORDER_1
-	CanAtmosPass = ATMOS_PASS_PROC
-	glass = FALSE
+	can_atmos_pass = ATMOS_PASS_PROC
 
 /obj/machinery/door/firedoor/border_only/closed
 	icon_state = "door_closed"
-	opacity = TRUE
 	density = TRUE
 
-/obj/machinery/door/firedoor/border_only/Initialize()
+/obj/machinery/door/firedoor/border_only/Initialize(mapload)
 	. = ..()
 
 	var/static/list/loc_connections = list(
@@ -279,6 +282,8 @@
 
 /obj/machinery/door/firedoor/border_only/proc/on_exit(datum/source, atom/movable/leaving, direction)
 	SIGNAL_HANDLER
+	if(leaving.movement_type & PHASING)
+		return
 	if(leaving == src)
 		return // Let's not block ourselves.
 
@@ -286,7 +291,7 @@
 		leaving.Bump(src)
 		return COMPONENT_ATOM_BLOCK_EXIT
 
-/obj/machinery/door/firedoor/border_only/CanAtmosPass(turf/T)
+/obj/machinery/door/firedoor/border_only/can_atmos_pass(turf/T)
 	if(get_dir(loc, T) == dir)
 		return !density
 	else

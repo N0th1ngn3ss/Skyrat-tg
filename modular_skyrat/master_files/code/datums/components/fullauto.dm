@@ -130,7 +130,7 @@
 	if(isnull(location)) //Clicking on a screen object.
 		if(_target.plane != CLICKCATCHER_PLANE) //The clickcatcher is a special case. We want the click to trigger then, under it.
 			return //If we click and drag on our worn backpack, for example, we want it to open instead.
-		_target = params2turf(modifiers["screen-loc"], get_turf(source.eye), source)
+		_target = params_to_turf(modifiers["screen-loc"], get_turf(source.eye), source)
 		if(!_target)
 			CRASH("Failed to get the turf under clickcatcher")
 
@@ -211,7 +211,7 @@
 	SIGNAL_HANDLER
 	if(isnull(over_location)) //This happens when the mouse is over an inventory or screen object, or on entering deep darkness, for example.
 		var/list/modifiers = params2list(params)
-		var/new_target = params2turf(modifiers["screen-loc"], get_turf(source.eye), source)
+		var/new_target = params_to_turf(modifiers["screen-loc"], get_turf(source.eye), source)
 		mouse_parameters = params
 		if(!new_target)
 			if(QDELETED(target)) //No new target acquired, and old one was deleted, get us out of here.
@@ -253,7 +253,7 @@
 		return FALSE
 	var/obj/item/bodypart/other_hand = shooter.has_hand_for_held_index(shooter.get_inactive_hand_index())
 	if(weapon_weight == WEAPON_HEAVY && (shooter.get_inactive_held_item() || !other_hand))
-		to_chat(shooter, "<span class='warning'>You need two hands to fire [src]!</span>")
+		to_chat(shooter, span_warning("You need two hands to fire [src]!"))
 		return FALSE
 	return TRUE
 

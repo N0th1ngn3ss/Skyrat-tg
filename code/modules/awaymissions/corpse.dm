@@ -20,7 +20,8 @@
 	var/short_desc = "The mapper forgot to set this!"
 	var/flavour_text = ""
 	var/important_info = ""
-	var/faction = null
+	/// Lazy string list of factions that the spawned mob will be in upon spawn
+	var/list/faction
 	var/permanent = FALSE //If true, the spawner will not disappear upon running out of uses.
 	var/random = FALSE //Don't set a name or gender, just go random
 	var/antagonist_type
@@ -31,19 +32,26 @@
 	var/burn_damage = 0
 	var/datum/disease/disease = null //Do they start with a pre-spawned disease?
 	var/mob_color //Change the mob's color
-	var/assignedrole
+	/// Typepath indicating the kind of job datum this ert member will have.
+	var/spawner_job_path = /datum/job/ghost_role
 	var/show_flavour = TRUE
 	var/banType = ROLE_LAVALAND
 	var/ghost_usable = TRUE
 	var/list/excluded_gamemodes
+	// If the spawner is ready to function at the moment
+	var/ready = TRUE
+	/// If the spawner uses radials
+	var/radial_based = FALSE
+
 
 //ATTACK GHOST IGNORING PARENT RETURN VALUE
 /obj/effect/mob_spawn/attack_ghost(mob/user)
 	if(!SSticker.HasRoundStarted() || !loc || !ghost_usable)
 		return
-	var/ghost_role = tgui_alert(usr,"Become [mob_name]? (Warning, You can no longer be revived!)",,list("Yes","No"))
-	if(ghost_role == "No" || !loc || QDELETED(user))
-		return
+	if(!radial_based)
+		var/ghost_role = tgui_alert(usr, "Become [mob_name]? (Warning, You can no longer be revived!)",, list("Yes", "No"))
+		if(ghost_role != "Yes" || !loc || QDELETED(user))
+			return
 	//SKYRAT EDIT ADDITION BEGIN
 	if(!extra_prompts(user))
 		return
@@ -76,10 +84,12 @@
 
 /obj/effect/mob_spawn/Initialize(mapload)
 	. = ..()
+	if(faction)
+		faction = string_list(faction)
 	if(instant || (roundstart && (mapload || (SSticker && SSticker.current_state > GAME_STATE_SETTING_UP))))
 		INVOKE_ASYNC(src, .proc/create)
 	else if(ghost_usable)
-		AddElement(/datum/element/point_of_interest)
+		SSpoints_of_interest.make_point_of_interest(src)
 		LAZYADD(GLOB.mob_spawners[name], src)
 
 /obj/effect/mob_spawn/Destroy()
@@ -115,7 +125,7 @@
 /obj/effect/mob_spawn/proc/equip(mob/M)
 	return
 
-///obj/effect/mob_spawn/proc/create(ckey, newname) //ORIGINAL
+///obj/effect/mob_spawn/proc/create(mob/user, newname) //ORIGINAL
 /obj/effect/mob_spawn/proc/create(ckey, newname, mob/user) //SKYRAT EDIT CHANGE
 	//SKYRAT EDIT CHANGE BEGIN
 	//var/mob/living/M = new mob_type(get_turf(src)) //ORIGINAL
@@ -134,7 +144,7 @@
 	*/
 	//SKYRAT EDIT CHANGE END
 	if(faction)
-		M.faction = list(faction)
+		M.faction = faction
 	if(disease)
 		M.ForceContractDisease(new disease)
 	if(death)
@@ -146,8 +156,8 @@
 	M.color = mob_color
 	equip(M)
 
-	if(ckey)
-		M.ckey = ckey
+	if(user?.ckey)
+		M.ckey = user.ckey
 		if(show_flavour)
 			var/output_message = "<span class='infoplain'><span class='big bold'>[short_desc]</span></span>"
 			if(flavour_text != "")
@@ -166,8 +176,7 @@
 				var/datum/objective/O = new/datum/objective(objective)
 				O.owner = MM
 				A.objectives += O
-		if(assignedrole)
-			M.mind.assigned_role = assignedrole
+		M.mind.set_assigned_role(SSjob.GetJobType(spawner_job_path))
 		special(M)
 		MM.name = M.real_name
 	if(uses > 0)
@@ -185,7 +194,7 @@
 	var/datum/outfit/outfit = /datum/outfit	//If this is a path, it will be instanced in Initialize()
 	var/disable_pda = TRUE
 	var/disable_sensors = TRUE
-	assignedrole = "Ghost Role"
+	spawner_job_path = /datum/job/ghost_role
 
 	var/husk = null
 	//these vars are for lazy mappers to override parts of the outfit
@@ -232,7 +241,7 @@
 		var/initial_string = "Would you like to spawn as a randomly created character, or use the one currently selected in your preferences?"
 		var/action = tgui_alert(user, initial_string, "", list("Use Random Character", "Use Character From Preferences"))
 		if(action && action == "Use Character From Preferences")
-			var/warning_string = "WARNING: This spawner will use your currently selected character in prefs ([user.client.prefs.real_name])\nMake sure that the character is not used as a station crew, or would have a good reason to be this role.(ie. intern in Space Hotel)\nUSING STATION CHARACTERS FOR SYNDICATE OR HOSTILE ROLES IS PROHIBITED WILL GET YOU BANNED!\nConsider making a character dedicated to the role.\nDo you wanna proceed?"
+			var/warning_string = "WARNING: This spawner will use your currently selected character in prefs ([user.client.prefs?.read_preference(/datum/preference/name/real_name)])\nMake sure that the character is not used as a station crew, or would have a good reason to be this role.(ie. intern in Space Hotel)\nUSING STATION CHARACTERS FOR SYNDICATE OR HOSTILE ROLES IS PROHIBITED WILL GET YOU BANNED!\nConsider making a character dedicated to the role.\nDo you wanna proceed?"
 			var/action2 = tgui_alert(user, warning_string, "", list("Yes", "No"))
 			if(action2 && action2 == "Yes")
 				is_pref_char = TRUE
@@ -248,7 +257,8 @@
 			chosen_alias = msg
 
 	if(is_pref_char)
-		if(!any_station_species && user.client.prefs.pref_species.type != mob_species)
+		var/species_type = user.client.prefs.read_preference(/datum/preference/choiced/species)
+		if(!any_station_species && species_type != mob_species)
 			alert(user, "Sorry, This spawner is limited to those species: [mob_species]. Please switch your character.", "", "Ok")
 			return FALSE
 
@@ -263,17 +273,17 @@
 /obj/effect/mob_spawn/human/create_mob(mob/user, newname)
 	var/mob/living/carbon/human/H = new mob_type(get_turf(src))
 	if(is_pref_char && user?.client)
-		user.client.prefs.copy_to(H)
+		user.client.prefs.safe_transfer_prefs_to(H)
 		H.dna.update_dna_identity()
 		if(chosen_alias)
 			H.name = chosen_alias
 			H.real_name = chosen_alias
 		//Pre-job equips so Voxes dont die
-		H.dna.species.before_equip_job(null, H)
+		H.dna.species.pre_equip_species_outfit(null, H)
 		H.regenerate_icons()
 		SSquirks.AssignQuirks(H, user.client, TRUE, TRUE, null, FALSE, H)
-		user.client.prefs.equip_preference_loadout(H, FALSE, blacklist = list(ITEM_SLOT_EARS,ITEM_SLOT_BELT,ITEM_SLOT_ID,ITEM_SLOT_BACK,ITEM_SLOT_ICLOTHING,ITEM_SLOT_BACK,ITEM_SLOT_OCLOTHING,ITEM_SLOT_GLOVES,ITEM_SLOT_FEET,ITEM_SLOT_HEAD,ITEM_SLOT_MASK,ITEM_SLOT_NECK,ITEM_SLOT_EYES,ITEM_SLOT_SUITSTORE,ITEM_SLOT_LPOCKET,ITEM_SLOT_RPOCKET)) //There has to be a better way to do this, this is utter bloat.
-		user.client.prefs.add_packed_items(H, null, FALSE)
+		for(var/datum/loadout_item/item as anything in loadout_list_to_datums(H?.client?.prefs?.loadout_list))
+			item.post_equip_item(H.client?.prefs, H)
 	else
 		if(!random || newname)
 			if(newname)
@@ -306,7 +316,7 @@
 	return H
 //SKYRAT EDIT ADDITION END
 
-/obj/effect/mob_spawn/human/Initialize()
+/obj/effect/mob_spawn/human/Initialize(mapload)
 	if(ispath(outfit))
 		outfit = new outfit()
 	if(!outfit)
@@ -340,11 +350,11 @@
 	if(haircolor)
 		H.hair_color = haircolor
 	else
-		H.hair_color = random_short_color()
+		H.hair_color = "#[random_color()]"
 	if(facial_haircolor)
 		H.facial_hair_color = facial_haircolor
 	else
-		H.facial_hair_color = random_short_color()
+		H.facial_hair_color = "#[random_color()]"
 	if(skin_tone)
 		H.skin_tone = skin_tone
 	else
@@ -403,7 +413,7 @@
 
 //Non-human spawners
 
-/obj/effect/mob_spawn/AICorpse/create(ckey) //Creates a corrupted AI
+/obj/effect/mob_spawn/AICorpse/create(mob/user) //Creates a corrupted AI
 	var/A = locate(/mob/living/silicon/ai) in loc
 	if(A)
 		return
@@ -423,7 +433,7 @@
 /obj/effect/mob_spawn/slime/equip(mob/living/simple_animal/slime/S)
 	S.colour = mobcolour
 
-/obj/effect/mob_spawn/facehugger/create(ckey) //Creates a squashed facehugger
+/obj/effect/mob_spawn/facehugger/create(mob/user) //Creates a squashed facehugger
 	var/obj/item/clothing/mask/facehugger/O = new(src.loc) //variable O is a new facehugger at the location of the landmark
 	O.name = src.name
 	O.Die() //call the facehugger's death proc
@@ -579,7 +589,7 @@
 	name = "rotting corpse"
 	mob_name = "zombie"
 	mob_species = /datum/species/zombie
-	assignedrole = "Zombie"
+	spawner_job_path = /datum/job/zombie
 
 /obj/effect/mob_spawn/human/abductor
 	name = "abductor"

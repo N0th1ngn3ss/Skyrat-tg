@@ -14,6 +14,7 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 	pipe_flags = PIPING_CARDINAL_AUTONORMALIZE | PIPING_BRIDGE
 	construction_type = /obj/item/pipe/binary
 	pipe_state = "mvalve"
+	custom_reconcilation = TRUE
 	///Type of valve (manual or digital), used to set the icon of the component in update_icon_nopipes()
 	var/valve_type = MANUAL_VALVE
 	///Bool to stop interactions while the opening/closing animation is going
@@ -47,6 +48,15 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 		vent_movement &= ~VENTCRAWL_ALLOWED
 
 
+// This is what handles the actual functionality of combining 2 pipenets when the valve is open
+// Basically when a pipenet updates it will consider both sides to be the same for the purpose of the gas update
+/obj/machinery/atmospherics/components/binary/valve/return_pipenets_for_reconcilation(datum/pipeline/requester)
+	. = ..()
+	if(!on)
+		return
+	. += parents[1]
+	. += parents[2]
+
 /obj/machinery/atmospherics/components/binary/valve/interact(mob/user)
 	add_fingerprint(usr)
 	if(switching)
@@ -72,13 +82,13 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 
 	interaction_flags_machine = INTERACT_MACHINE_ALLOW_SILICON | INTERACT_MACHINE_OFFLINE | INTERACT_MACHINE_OPEN | INTERACT_MACHINE_OPEN_SILICON
 
-/obj/machinery/atmospherics/components/binary/valve/digital/Initialize()
+/obj/machinery/atmospherics/components/binary/valve/digital/Initialize(mapload)
 	. = ..()
 	AddComponent(/datum/component/usb_port, list(/obj/item/circuit_component/digital_valve))
 
 /obj/item/circuit_component/digital_valve
 	display_name = "Digital Valve"
-	display_desc = "The interface for communicating with a digital valve."
+	desc = "The interface for communicating with a digital valve."
 
 	var/obj/machinery/atmospherics/components/binary/valve/digital/attached_valve
 
@@ -94,8 +104,7 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 	/// Sent when the valve is closed
 	var/datum/port/output/closed
 
-/obj/item/circuit_component/digital_valve/Initialize()
-	. = ..()
+/obj/item/circuit_component/digital_valve/populate_ports()
 	open = add_input_port("Open", PORT_TYPE_SIGNAL)
 	close = add_input_port("Close", PORT_TYPE_SIGNAL)
 
@@ -115,6 +124,7 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 	return ..()
 
 /obj/item/circuit_component/digital_valve/proc/handle_valve_toggled(datum/source, on)
+	SIGNAL_HANDLER
 	is_open.set_output(on)
 	if(on)
 		opened.set_output(COMPONENT_SIGNAL)
@@ -122,9 +132,6 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 		closed.set_output(COMPONENT_SIGNAL)
 
 /obj/item/circuit_component/digital_valve/input_received(datum/port/input/port)
-	. = ..()
-	if(.)
-		return
 
 	if(!attached_valve)
 		return

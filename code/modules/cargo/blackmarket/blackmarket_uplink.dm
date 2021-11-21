@@ -14,12 +14,12 @@
 	/// List of typepaths for "/datum/blackmarket_market"s that this uplink can access.
 	var/list/accessible_markets = list(/datum/blackmarket_market/blackmarket)
 
-/obj/item/blackmarket_uplink/Initialize()
+/obj/item/blackmarket_uplink/Initialize(mapload)
 	. = ..()
 	if(accessible_markets.len)
 		viewing_market = accessible_markets[1]
 		var/list/categories = SSblackmarket.markets[viewing_market].categories
-		if(categories && categories.len)
+		if(categories?.len)
 			viewing_category = categories[1]
 
 /obj/item/blackmarket_uplink/attackby(obj/item/I, mob/user, params)
@@ -37,7 +37,7 @@
 	if(!isliving(user) || !user.canUseTopic(src, BE_CLOSE, FALSE, NO_TK))
 		return
 
-	var/amount_to_remove =  FLOOR(input(user, "How much do you want to withdraw? Current Amount: [money]", "Withdraw Funds", 5) as num|null, 1)
+	var/amount_to_remove = FLOOR(input(user, "How much do you want to withdraw? Current Amount: [money]", "Withdraw Funds", 5) as num|null, 1)
 	if(!user.canUseTopic(src, BE_CLOSE, FALSE, NO_TK))
 		return
 
@@ -121,7 +121,7 @@
 			viewing_market = market
 
 			var/list/categories = SSblackmarket.markets[viewing_market].categories
-			if(categories && categories.len)
+			if(categories?.len)
 				viewing_category = categories[1]
 			else
 				viewing_category = null

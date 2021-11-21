@@ -22,7 +22,7 @@
 	icon_state = "petcollar_poly"
 	pocket_storage_component_path = /datum/component/storage/concrete/pockets/small/collar
 	var/is_polychromic = TRUE
-	var/poly_colors = list("0BB", "FC0", "FFF")
+	var/poly_colors = list("#00BBBB", "#FFCC00", "#FFFFFF")
 	var/tagname = null
 	var/treat_path = /obj/item/food/cookie
 
@@ -43,7 +43,7 @@
 /obj/item/clothing/neck/human_petcollar/leather
 	name = "leather pet collar"
 	icon_state = "leathercollar_poly"
-	poly_colors = list("222", "888", "888")
+	poly_colors = list("#222222", "#888888", "#888888")
 
 /obj/item/clothing/neck/human_petcollar/choker
 	desc = "Quite fashionable... if you're somebody who's just read their first BDSM-themed erotica novel."
@@ -62,23 +62,23 @@
 /obj/item/clothing/neck/human_petcollar/locked/attackby(obj/item/K, mob/user, params)
 	if(istype(K, /obj/item/key/collar))
 		if(lock != FALSE)
-			to_chat(user, "<span class='warning'>With a click the collar unlocks!</span>")
+			to_chat(user, span_warning("With a click the collar unlocks!"))
 			lock = FALSE
 		else
-			to_chat(user, "<span class='warning'>With a click the collar locks!</span>")
+			to_chat(user, span_warning("With a click the collar locks!"))
 			lock = TRUE
 	return
 
 /obj/item/clothing/neck/human_petcollar/locked/attack_hand(mob/user)
 	if(loc == user && user.get_item_by_slot(ITEM_SLOT_NECK) && lock != FALSE)
-		to_chat(user, "<span class='warning'>The collar is locked! You'll need unlock the collar before you can take it off!</span>")
+		to_chat(user, span_warning("The collar is locked! You'll need unlock the collar before you can take it off!"))
 		return
 	..()
 
 /obj/item/clothing/neck/human_petcollar/locked/leather
 	name = "leather pet collar"
 	icon_state = "leathercollar_poly"
-	poly_colors = list("222", "888", "888")
+	poly_colors = list("#222222", "#888888", "#888888")
 
 /obj/item/clothing/neck/human_petcollar/locked/choker
 	name = "choker"

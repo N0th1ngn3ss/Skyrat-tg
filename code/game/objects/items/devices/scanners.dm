@@ -6,7 +6,6 @@ T-RAY
 HEALTH ANALYZER
 GAS ANALYZER
 SLIME SCANNER
-NANITE SCANNER
 GENE SCANNER
 
 */
@@ -189,6 +188,8 @@ GENE SCANNER
 
 	render_list += "[span_info("Analyzing results for [M]:")]\n<span class='info ml-1'>Overall status: [mob_status]</span>\n"
 
+	SEND_SIGNAL(M, COMSIG_LIVING_HEALTHSCAN, render_list, advanced, user, mode)
+
 	// Husk detection
 	if(advanced && HAS_TRAIT_FROM(M, TRAIT_HUSK, BURN))
 		render_list += "<span class='alert ml-1'>Subject has been husked by severe burns.</span>\n"
@@ -219,6 +220,10 @@ GENE SCANNER
 	if(ishuman(M))
 		var/mob/living/carbon/human/the_dude = M
 		var/datum/species/the_dudes_species = the_dude.dna.species
+//SKYRAT EDIT BEGIN - Neural Laces
+		if (the_dude.getorganslot(ORGAN_SLOT_STACK))
+			render_list += "<span class='alert ml-1'>Subject possesses a cortical stack.</span>\n"
+//SKYRAT EDIT END - Neural Laces
 		if (!(NOBLOOD in the_dudes_species.species_traits) && !the_dude.getorganslot(ORGAN_SLOT_HEART))
 			render_list += "<span class='alert ml-1'>Subject lacks a heart.</span>\n"
 		if (!(TRAIT_NOBREATH in the_dudes_species.species_traits) && !the_dude.getorganslot(ORGAN_SLOT_LUNGS))
@@ -253,10 +258,8 @@ GENE SCANNER
 	if(advanced)
 		render_list += "<span class='info ml-1'>Brain Activity Level: [(200 - M.getOrganLoss(ORGAN_SLOT_BRAIN))/2]%.</span>\n"
 
-	if (M.radiation)
-		render_list += "<span class='alert ml-1'>Subject is irradiated.</span>\n"
-		if(advanced)
-			render_list += "<span class='info ml-1'>Radiation Level: [M.radiation]%.</span>\n"
+	if (HAS_TRAIT(M, TRAIT_IRRADIATED))
+		render_list += "<span class='alert ml-1'>Subject is irradiated. Supply toxin healing.</span>\n"
 
 	if(advanced && M.hallucinating())
 		render_list += "<span class='info ml-1'>Subject is hallucinating.</span>\n"
@@ -339,17 +342,7 @@ GENE SCANNER
 				<td style='width:12em;'><font color='#ff0000'><b>Status</b></font></td>"
 
 			for(var/obj/item/organ/organ in H.internal_organs)
-				var/status = ""
-				if(H.has_reagent(/datum/reagent/inverse/technetium))
-					if(organ.damage)
-						status = "<font color='#E42426'> organ is [round((organ.damage/organ.maxHealth)*100, 1)]% damaged.</font>"
-				else
-					if (organ.organ_flags & ORGAN_FAILING)
-						status = "<font color='#cc3333'>Non-Functional</font>"
-					else if (organ.damage > organ.high_threshold)
-						status = "<font color='#ff9933'>Severely Damaged</font>"
-					else if (organ.damage > organ.low_threshold)
-						status = "<font color='#ffcc33'>Mildly Damaged</font>"
+				var/status = organ.get_status_text()
 				if (status != "")
 					render = TRUE
 					toReport += "<tr><td><font color='#cc3333'>[organ.name]:</font></td>\
@@ -416,7 +409,7 @@ GENE SCANNER
 				var/mob/living/carbon/human/H = C
 				if(H.is_bleeding())
 					render_list += "<span class='alert ml-1'><b>Subject is bleeding!</b></span>\n"
-			var/blood_percent =  round((C.blood_volume / BLOOD_VOLUME_NORMAL)*100)
+			var/blood_percent = round((C.blood_volume / BLOOD_VOLUME_NORMAL)*100)
 			var/blood_type = C.dna.blood_type
 			if(blood_id != /datum/reagent/blood) // special blood substance
 				var/datum/reagent/R = GLOB.chemical_reagents_list[blood_id]
@@ -436,8 +429,7 @@ GENE SCANNER
 			render_list += "<span class='notice ml-1'>Detected cybernetic modifications:</span>\n"
 			render_list += "<span class='notice ml-2'>[cyberimp_detect]</span>\n"
 
-	SEND_SIGNAL(M, COMSIG_NANITE_SCAN, user, FALSE)
-	to_chat(user, jointext(render_list, ""), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding
+	to_chat(user, examine_block(jointext(render_list, "")), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding //SKYRAT EDIT CHANGE
 
 /proc/chemscan(mob/living/user, mob/living/M)
 	if(user.incapacitated())
@@ -485,7 +477,7 @@ GENE SCANNER
 		if(M.has_status_effect(/datum/status_effect/eigenstasium))
 			render_list += "<span class='notice ml-1'>Subject is temporally unstable. Stabilising agent is recommended to reduce disturbances.</span>\n"
 
-		to_chat(user, jointext(render_list, ""), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding
+		to_chat(user, examine_block(jointext(render_list, "")), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding //SKYRAT EDIT CHANGE
 
 /obj/item/healthanalyzer/verb/toggle_mode()
 	set name = "Switch Verbosity"
@@ -530,7 +522,7 @@ GENE SCANNER
 		else
 			to_chat(user, "<span class='notice ml-1'>No wounds detected in subject.</span>")
 	else
-		to_chat(user, jointext(render_list, ""))
+		to_chat(user, examine_block(jointext(render_list, ""))) //SKYRAT EDIT CHANGE
 
 /obj/item/healthanalyzer/wound
 	name = "first aid analyzer"
@@ -571,7 +563,7 @@ GENE SCANNER
 
 /obj/item/analyzer//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODULE
 	desc = "A hand-held environmental scanner which reports current gas levels. Alt-Click to use the built in barometer function."
-	name = "analyzer"
+	name = "gas analyzer"
 	custom_price = PAYCHECK_ASSISTANT * 0.9
 	icon = 'icons/obj/device.dmi'
 	icon_state = "analyzer"
@@ -650,7 +642,7 @@ GENE SCANNER
 			var/gas_concentration = env_gases[id][MOLES]/total_moles
 			render_list += "[span_alert("[env_gases[id][GAS_META][META_GAS_NAME]]: [round(gas_concentration*100, 0.01)] % ([round(env_gases[id][MOLES], 0.01)] mol)")]\n"
 		render_list += "[span_info("Temperature: [round(environment.temperature-T0C, 0.01)] &deg;C ([round(environment.temperature, 0.01)] K)")]\n"
-	to_chat(user, jointext(render_list, ""), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding
+	to_chat(user, examine_block(jointext(render_list, "")), trailing_newline = FALSE) // we handled the last <br> so we don't need handholding //SKYRAT EDIT CHANGE
 
 /obj/item/analyzer/AltClick(mob/user) //Barometer output for measuring when the next storm happens
 	..()
@@ -758,7 +750,7 @@ GENE SCANNER
 			render_list += "[span_boldnotice("Large amounts of free neutrons detected in the air indicate that a fusion reaction took place.")]\
 						\n[span_notice("Instability of the last fusion reaction: [round(cached_scan_results["fusion"], 0.01)].")]"
 
-	to_chat(user, jointext(render_list, "\n")) // we let the join apply newlines so we do need handholding
+	to_chat(user, examine_block(jointext(render_list, "\n"))) // we let the join apply newlines so we do need handholding //SKYRAT EDIT CHANGE
 	return TRUE
 
 //slime scanner
@@ -828,50 +820,9 @@ GENE SCANNER
 	if(T.effectmod)
 		to_render += "\n[span_notice("Core mutation in progress: [T.effectmod]")]\
 					  \n[span_notice("Progress in core mutation: [T.applied] / [SLIME_EXTRACT_CROSSING_REQUIRED]")]"
-	to_chat(user, to_render + "\n========================")
+	to_chat(user, examine_block(to_render + "\n========================")) //SKYRAT EDIT CHANGE
 
-
-/obj/item/nanite_scanner
-	name = "nanite scanner"
-	icon = 'icons/obj/device.dmi'
-	icon_state = "nanite_scanner"
-	inhand_icon_state = "electronic"
-	worn_icon_state = "electronic"
-	lefthand_file = 'icons/mob/inhands/equipment/medical_lefthand.dmi'
-	righthand_file = 'icons/mob/inhands/equipment/medical_righthand.dmi'
-	desc = "A hand-held body scanner able to detect nanites and their programming."
-	flags_1 = CONDUCT_1
-	item_flags = NOBLUDGEON
-	slot_flags = ITEM_SLOT_BELT
-	throwforce = 3
-	w_class = WEIGHT_CLASS_TINY
-	throw_speed = 3
-	throw_range = 7
-	custom_materials = list(/datum/material/iron=200)
-
-	//SKYRAT EDIT ADDITION BEGIN
-	power_use_amount = POWER_CELL_USE_LOW
-
-/obj/item/nanite_scanner/ComponentInitialize()
-	. = ..()
-	AddComponent(/datum/component/cell)
-	//SKYRAT EDIT END
-
-/obj/item/nanite_scanner/attack(mob/living/M, mob/living/carbon/human/user)
-	//SKYRAT EDIT ADDITION
-	if(!(item_use_power(power_use_amount, user) & COMPONENT_POWER_SUCCESS))
-		return
-		//SKYRAT EDIT END
-	user.visible_message(span_notice("[user] analyzes [M]'s nanites."), \
-						span_notice("You analyze [M]'s nanites."))
-
-	add_fingerprint(user)
-
-	var/response = SEND_SIGNAL(M, COMSIG_NANITE_SCAN, user, TRUE)
-	if(!response)
-		to_chat(user, span_info("No nanites detected in the subject."))
-
-/obj/item/sequence_scanner//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODULE
+/obj/item/sequence_scanner//SKYRAT EDIT - ICON OVERRIDEN BY AESTHETICS - SEE MODUL
 	name = "genetic sequence scanner"
 	icon = 'icons/obj/device.dmi'
 	icon_state = "gene"
@@ -951,7 +902,7 @@ GENE SCANNER
 	for(var/A in buffer)
 		options += get_display_name(A)
 
-	var/answer = input(user, "Analyze Potential", "Sequence Analyzer")  as null|anything in sortList(options)
+	var/answer = input(user, "Analyze Potential", "Sequence Analyzer")  as null|anything in sort_list(options)
 	if(answer && ready && user.canUseTopic(src, BE_CLOSE, FALSE, NO_TK))
 		var/sequence
 		for(var/A in buffer) //this physically hurts but i dont know what anything else short of an assoc list

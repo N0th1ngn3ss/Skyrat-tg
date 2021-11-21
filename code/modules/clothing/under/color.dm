@@ -12,6 +12,7 @@
 	inhand_icon_state = "jumpsuit"
 	worn_icon_state = "jumpsuit"
 	worn_icon = 'icons/mob/clothing/under/color.dmi'
+	flags_1 = IS_PLAYER_COLORABLE_1
 
 /obj/item/clothing/under/color/jumpskirt
 	body_parts_covered = CHEST|GROIN|ARMS
@@ -23,7 +24,7 @@
 /obj/item/clothing/under/color/random
 	icon_state = "random_jumpsuit"
 
-/obj/item/clothing/under/color/random/Initialize()
+/obj/item/clothing/under/color/random/Initialize(mapload)
 	..()
 	var/obj/item/clothing/under/color/C = pick(subtypesof(/obj/item/clothing/under/color) - typesof(/obj/item/clothing/under/color/jumpskirt) - /obj/item/clothing/under/color/random - /obj/item/clothing/under/color/grey/ancient - /obj/item/clothing/under/color/black/ghost - /obj/item/clothing/under/rank/prisoner)
 	if(ishuman(loc))
@@ -36,7 +37,7 @@
 /obj/item/clothing/under/color/jumpskirt/random
 	icon_state = "random_jumpsuit" //Skirt variant needed
 
-/obj/item/clothing/under/color/jumpskirt/random/Initialize()
+/obj/item/clothing/under/color/jumpskirt/random/Initialize(mapload)
 	..()
 	var/obj/item/clothing/under/color/jumpskirt/C = pick(subtypesof(/obj/item/clothing/under/color/jumpskirt) - /obj/item/clothing/under/color/jumpskirt/random - /obj/item/clothing/under/rank/prisoner/skirt)
 	if(ishuman(loc))
@@ -56,7 +57,7 @@
 /obj/item/clothing/under/color/black/ghost
 	item_flags = DROPDEL
 
-/obj/item/clothing/under/color/black/ghost/Initialize()
+/obj/item/clothing/under/color/black/ghost/Initialize(mapload)
 	. = ..()
 	ADD_TRAIT(src, TRAIT_NODROP, CULT_TRAIT)
 
@@ -205,6 +206,7 @@
 	greyscale_config_inhand_right = null
 	greyscale_config_worn = null
 	can_adjust = FALSE
+	flags_1 = NONE
 
 /obj/item/clothing/under/color/jumpskirt/rainbow
 	name = "rainbow jumpskirt"
@@ -216,3 +218,4 @@
 	greyscale_config_inhand_right = null
 	greyscale_config_worn = null
 	can_adjust = FALSE
+	flags_1 = NONE

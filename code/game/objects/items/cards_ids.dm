@@ -33,39 +33,6 @@
 	user.visible_message(span_suicide("[user] begins to swipe [user.p_their()] neck with \the [src]! It looks like [user.p_theyre()] trying to commit suicide!"))
 	return BRUTELOSS
 
-/obj/item/card/data
-	name = "data card"
-	desc = "A plastic magstripe card for simple and speedy data storage and transfer. This one has a stripe running down the middle."
-	icon_state = "data_1"
-	obj_flags = UNIQUE_RENAME
-	var/function = "storage"
-	var/data = "null"
-	var/special = null
-	inhand_icon_state = "card-id"
-	lefthand_file = 'icons/mob/inhands/equipment/idcards_lefthand.dmi'
-	righthand_file = 'icons/mob/inhands/equipment/idcards_righthand.dmi'
-	var/detail_color = COLOR_ASSEMBLY_ORANGE
-
-/obj/item/card/data/Initialize()
-	.=..()
-	update_appearance()
-
-/obj/item/card/data/update_overlays()
-	. = ..()
-	if(detail_color == COLOR_FLOORTILE_GRAY)
-		return
-	var/mutable_appearance/detail_overlay = mutable_appearance('icons/obj/card.dmi', "[icon_state]-color")
-	detail_overlay.color = detail_color
-	. += detail_overlay
-
-/obj/item/card/data/full_color
-	desc = "A plastic magstripe card for simple and speedy data storage and transfer. This one has the entire card colored."
-	icon_state = "data_2"
-
-/obj/item/card/data/disk
-	desc = "A plastic magstripe card for simple and speedy data storage and transfer. This one inexplicibly looks like a floppy disk."
-	icon_state = "data_3"
-
 /*
  * ID CARDS
  */
@@ -80,7 +47,7 @@
 	lefthand_file = 'icons/mob/inhands/equipment/idcards_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/idcards_righthand.dmi'
 	slot_flags = ITEM_SLOT_ID
-	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 100, ACID = 100)
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, FIRE = 100, ACID = 100)
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 
 	/// Cached icon that has been built for this card. Intended for use in chat.
@@ -412,7 +379,7 @@
 	if(Adjacent(user))
 		var/minor
 		if(registered_name && registered_age && registered_age < AGE_MINOR)
-			minor = " <b>(MINOR)</b>"
+			minor = " <b>[registered_age]</b>" //SKYRAT EDIT CHANGE
 		user.visible_message(span_notice("[user] shows you: [icon2html(src, viewers(user))] [src.name][minor]."), span_notice("You show \the [src.name][minor]."))
 	add_fingerprint(user)
 
@@ -562,7 +529,7 @@
 		registered_account.bank_card_talk(span_warning("内部服务器错误"), TRUE)
 		return
 
-	var/amount_to_remove =  FLOOR(input(user, "How much do you want to withdraw? Current Balance: [registered_account.account_balance]", "Withdraw Funds", 5) as num|null, 1)
+	var/amount_to_remove = FLOOR(input(user, "How much do you want to withdraw? Current Balance: [registered_account.account_balance]", "Withdraw Funds", 5) as num|null, 1)
 
 	if(!amount_to_remove || amount_to_remove < 0)
 		return
@@ -613,7 +580,7 @@
 	return msg
 
 /obj/item/card/id/GetAccess()
-	return access
+	return access.Copy()
 
 /obj/item/card/id/GetID()
 	return src
@@ -645,6 +612,10 @@
 		assignment_string = " ([assignment])"
 
 	name = "[name_string][assignment_string]"
+
+/// Returns the trim assignment name.
+/obj/item/card/id/proc/get_trim_assignment()
+	return trim?.assignment || assignment
 
 /obj/item/card/id/away
 	name = "\proper a perfectly generic identification card"
@@ -697,7 +668,7 @@
 	var/department_name = ACCOUNT_CIV_NAME
 	registered_age = null
 
-/obj/item/card/id/departmental_budget/Initialize()
+/obj/item/card/id/departmental_budget/Initialize(mapload)
 	. = ..()
 	var/datum/bank_account/B = SSeconomy.get_dep_account(department_ID)
 	if(B)
@@ -766,7 +737,7 @@
 	var/intern_threshold = (CONFIG_GET(number/use_low_living_hour_intern_hours) * 60) || (CONFIG_GET(number/use_exp_restrictions_heads_hours) * 60) || INTERN_THRESHOLD_FALLBACK_HOURS * 60
 	var/playtime = user.client.get_exp_living(pure_numeric = TRUE)
 
-	if((intern_threshold >= playtime) && (user.mind?.assigned_role in SSjob.station_jobs))
+	if((intern_threshold >= playtime) && (user.mind?.assigned_role.title in SSjob.station_jobs))
 		is_intern = TRUE
 		update_label()
 		return
@@ -810,7 +781,7 @@
 			var/obj/item/modular_computer/tablet/slot_holder = slot.holder
 			UnregisterSignal(slot_holder, list(COMSIG_ITEM_EQUIPPED, COMSIG_ITEM_DROPPED))
 
-	if(istype(loc, /obj/item/pda) || istype(OldLoc, /obj/item/storage/wallet))
+	if(istype(loc, /obj/item/pda) || istype(loc, /obj/item/storage/wallet))
 		RegisterSignal(loc, COMSIG_ITEM_EQUIPPED, .proc/update_intern_status)
 		RegisterSignal(loc, COMSIG_ITEM_DROPPED, .proc/remove_intern_status)
 
@@ -837,6 +808,15 @@
 		return
 
 	. += mutable_appearance(trim_icon_file, trim_icon_state)
+
+/obj/item/card/id/advanced/get_trim_assignment()
+	if(trim_assignment_override)
+		return trim_assignment_override
+	else if(ispath(trim))
+		var/datum/id_trim/trim_singleton = SSid_access.trim_singletons_by_path[trim]
+		return trim_singleton.assignment
+
+	return ..()
 
 /obj/item/card/id/advanced/silver
 	name = "silver identification card"
@@ -968,7 +948,7 @@
 	trim = /datum/id_trim/admin
 	wildcard_slots = WILDCARD_LIMIT_ADMIN
 
-/obj/item/card/id/advanced/debug/Initialize()
+/obj/item/card/id/advanced/debug/Initialize(mapload)
 	. = ..()
 	registered_account = SSeconomy.get_dep_account(ACCOUNT_CAR)
 
@@ -1021,7 +1001,7 @@
 			if(isliving(loc))
 				to_chat(loc, "<span class='boldnotice'>[src]</span><span class='notice'> buzzes: You have served your sentence! You may now exit prison through the turnstiles and collect your belongings.</span>")
 		else
-			playsound(loc, 'modular_skyrat/modules/mapping/code/quest_succeeded.ogg', 50, 1)
+			playsound(loc, 'modular_skyrat/modules/mapping/sounds/quest_succeeded.ogg', 50, 1)
 			if(isliving(loc))
 				to_chat(loc, "<span class='boldnotice'>[src]</span><span class='notice'><b>Quest Completed!</b> <i>Serve your prison sentence</i>. You may now leave the prison through the turnstiles and return this ID to the locker to retrieve your belongings.</span>")
 		STOP_PROCESSING(SSobj, src)
@@ -1093,7 +1073,7 @@
 	/// Weak ref to the ID card we're currently attempting to steal access from.
 	var/datum/weakref/theft_target
 
-/obj/item/card/id/advanced/chameleon/Initialize()
+/obj/item/card/id/advanced/chameleon/Initialize(mapload)
 	. = ..()
 
 	var/datum/action/item_action/chameleon/change/id/chameleon_card_action = new(src)
@@ -1313,7 +1293,7 @@
 							trim_list[fake_trim_name] = trim_path
 
 					var/selected_trim_path
-					selected_trim_path = input("Select trim to apply to your card.\nNote: This will not grant any trim accesses.", "Forge Trim", selected_trim_path) as null|anything in sortList(trim_list, /proc/cmp_typepaths_asc)
+					selected_trim_path = input("Select trim to apply to your card.\nNote: This will not grant any trim accesses.", "Forge Trim", selected_trim_path) as null|anything in sort_list(trim_list, /proc/cmp_typepaths_asc)
 					if(selected_trim_path)
 						SSid_access.apply_trim_to_chameleon_card(src, trim_list[selected_trim_path])
 
@@ -1361,11 +1341,20 @@
 	return ..()
 
 /// A special variant of the classic chameleon ID card which accepts all access.
+//SKYRAT EDIT BEGIN..
+
+#define WILDCARD_LIMIT_CHAMELEON_ADVANCED list( \
+	WILDCARD_NAME_CENTCOM = list(limit = 2, usage = list()), \
+	WILDCARD_NAME_SYNDICATE = list(limit = -1, usage = list()), \
+	WILDCARD_NAME_CAPTAIN = list(limit = -1, usage = list()) \
+)
+
 /obj/item/card/id/advanced/chameleon/black
 	icon_state = "card_black"
 	worn_icon_state = "card_black"
 	assigned_icon_state = "assigned_syndicate"
-	wildcard_slots = WILDCARD_LIMIT_GOLD
+	wildcard_slots = WILDCARD_LIMIT_CHAMELEON_ADVANCED
+//SKYRAT EDIT END
 
 /obj/item/card/id/advanced/engioutpost
 	registered_name = "George 'Plastic' Miller"

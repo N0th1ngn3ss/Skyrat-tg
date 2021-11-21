@@ -34,14 +34,14 @@ GLOBAL_VAR(station_nuke_source)
 	var/proper_bomb = TRUE //Please
 	var/obj/effect/countdown/nuclearbomb/countdown
 
-/obj/machinery/nuclearbomb/Initialize()
+/obj/machinery/nuclearbomb/Initialize(mapload)
 	. = ..()
 	countdown = new(src)
 	GLOB.nuke_list += src
 	core = new /obj/item/nuke_core(src)
 	STOP_PROCESSING(SSobj, core)
 	update_appearance()
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 	previous_level = get_security_level()
 
 /obj/machinery/nuclearbomb/Destroy()
@@ -75,9 +75,9 @@ GLOBAL_VAR(station_nuke_source)
 	switch(off_station)
 		if(0)
 			if(get_antag_minds(/datum/antagonist/nukeop).len && syndies_escaped())
-				return CINEMATIC_ANNIHILATION
-			else
 				return CINEMATIC_NUKE_WIN
+			else
+				return CINEMATIC_ANNIHILATION
 		if(1)
 			return CINEMATIC_NUKE_MISS
 		if(2)
@@ -475,7 +475,7 @@ GLOBAL_VAR(station_nuke_source)
 		SSticker.roundend_check_paused = FALSE
 		return
 
-	GLOB.enter_allowed = FALSE
+	SSlag_switch.set_measure(DISABLE_NON_OBSJOBS, TRUE)
 
 	var/off_station = 0
 	var/turf/bomb_location = get_turf(src)
@@ -504,12 +504,16 @@ GLOBAL_VAR(station_nuke_source)
 	SSticker.roundend_check_paused = FALSE
 
 /obj/machinery/nuclearbomb/proc/really_actually_explode(off_station)
+	// var/turf/bomb_location = get_turf(src) // SKYRAT EDIT REMOVAL - Shut up linters
 	Cinematic(get_cinematic_type(off_station),world,CALLBACK(SSticker,/datum/controller/subsystem/ticker/proc/station_explosion_detonation,src))
+	/* SKYRAT EDIT REMOVAL
+	if(off_station != NUKE_NEAR_MISS) // Don't kill people in the station if the nuke missed, even if we are technically on the same z-level
+		INVOKE_ASYNC(GLOBAL_PROC,.proc/KillEveryoneOnZLevel, bomb_location.z)
+	*/
 	explosion(src, 40, 50, 70, 80, TRUE, TRUE) //SKYRAT EDIT ADDITION
-	//INVOKE_ASYNC(GLOBAL_PROC,.proc/KillEveryoneOnZLevel, z) SKYRAT EDIT REMOVAL
 
 /obj/machinery/nuclearbomb/proc/get_cinematic_type(off_station)
-	if(off_station < 2)
+	if(off_station < NUKE_NEAR_MISS)
 		return CINEMATIC_SELFDESTRUCT
 	else
 		return CINEMATIC_SELFDESTRUCT_MISS
@@ -520,7 +524,7 @@ GLOBAL_VAR(station_nuke_source)
 	proper_bomb = FALSE
 	var/obj/structure/reagent_dispensers/beerkeg/keg
 
-/obj/machinery/nuclearbomb/beer/Initialize()
+/obj/machinery/nuclearbomb/beer/Initialize(mapload)
 	. = ..()
 	keg = new(src)
 	QDEL_NULL(core)
@@ -600,6 +604,7 @@ GLOBAL_VAR(station_nuke_source)
 		return
 	for(var/_victim in GLOB.mob_living_list)
 		var/mob/living/victim = _victim
+		to_chat(victim, span_userdanger("You are shredded to atoms!"))
 		if(victim.stat != DEAD && victim.z == z)
 			victim.gib()
 */
@@ -634,25 +639,25 @@ This is here to make the tiles around the station mininuke change when it's arme
 	righthand_file = 'icons/mob/inhands/equipment/idcards_righthand.dmi'
 	icon_state = "datadisk0"
 	drop_sound = 'sound/items/handling/disk_drop.ogg'
-	pickup_sound =  'sound/items/handling/disk_pickup.ogg'
+	pickup_sound = 'sound/items/handling/disk_pickup.ogg'
 
 /obj/item/disk/nuclear
 	name = "nuclear authentication disk"
 	desc = "Better keep this safe."
 	icon_state = "nucleardisk"
 	max_integrity = 250
-	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 30, BIO = 0, RAD = 0, FIRE = 100, ACID = 100)
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 30, BIO = 0, FIRE = 100, ACID = 100)
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | ACID_PROOF
 	var/fake = FALSE
 	var/turf/lastlocation
 	var/last_disk_move
 
-/obj/item/disk/nuclear/Initialize()
+/obj/item/disk/nuclear/Initialize(mapload)
 	. = ..()
 	AddElement(/datum/element/bed_tuckable, 6, -6, 0)
 
 	if(!fake)
-		AddElement(/datum/element/point_of_interest)
+		SSpoints_of_interest.make_point_of_interest(src)
 		last_disk_move = world.time
 		START_PROCESSING(SSobj, src)
 

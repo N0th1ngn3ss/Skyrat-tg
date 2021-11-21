@@ -40,9 +40,9 @@
 	name = "Incinerator Air Control (Computer Board)"
 	build_path = /obj/machinery/computer/atmos_control/incinerator
 
-/obj/item/circuitboard/computer/atmos_control/toxinsmix
-	name = "Toxins Mixing Air Control (Computer Board)"
-	build_path = /obj/machinery/computer/atmos_control/toxinsmix
+/obj/item/circuitboard/computer/atmos_control/ordnancemix
+	name = "Ordnance Mixing Air Control (Computer Board)"
+	build_path = /obj/machinery/computer/atmos_control/ordnancemix
 
 /obj/item/circuitboard/computer/atmos_control/tank
 	name = "Tank Control (Computer Board)"
@@ -52,9 +52,9 @@
 	name = "Oxygen Supply Control (Computer Board)"
 	build_path = /obj/machinery/computer/atmos_control/tank/oxygen_tank
 
-/obj/item/circuitboard/computer/atmos_control/tank/toxin_tank
+/obj/item/circuitboard/computer/atmos_control/tank/plasma_tank
 	name = "Plasma Supply Control (Computer Board)"
-	build_path = /obj/machinery/computer/atmos_control/tank/toxin_tank
+	build_path = /obj/machinery/computer/atmos_control/tank/plasma_tank
 
 /obj/item/circuitboard/computer/atmos_control/tank/air_tank
 	name = "Mixed Air Supply Control (Computer Board)"
@@ -104,9 +104,9 @@
 	name = "Miasma Supply Control (Computer Board)"
 	build_path = /obj/machinery/computer/atmos_control/tank/miasma_tank
 
-/obj/item/circuitboard/computer/atmos_control/tank/nitryl_tank
-	name = "Nitryl Supply Control (Computer Board)"
-	build_path = /obj/machinery/computer/atmos_control/tank/nitryl_tank
+/obj/item/circuitboard/computer/atmos_control/tank/nitrium_tank
+	name = "Nitrium Supply Control (Computer Board)"
+	build_path = /obj/machinery/computer/atmos_control/tank/nitrium_tank
 
 /obj/item/circuitboard/computer/atmos_control/tank/pluoxium_tank
 	name = "Pluoxium Supply Control (Computer Board)"
@@ -115,10 +115,6 @@
 /obj/item/circuitboard/computer/atmos_control/tank/proto_nitrate_tank
 	name = "Proto-Nitrate Supply Control (Computer Board)"
 	build_path = /obj/machinery/computer/atmos_control/tank/proto_nitrate_tank
-
-/obj/item/circuitboard/computer/atmos_control/tank/stimulum_tank
-	name = "Stimulum Supply Control (Computer Board)"
-	build_path = /obj/machinery/computer/atmos_control/tank/stimulum_tank
 
 /obj/item/circuitboard/computer/atmos_control/tank/tritium_tank
 	name = "Tritium Supply Control (Computer Board)"
@@ -281,7 +277,7 @@
 	var/challenge = FALSE
 	var/moved = FALSE
 
-/obj/item/circuitboard/computer/syndicate_shuttle/Initialize()
+/obj/item/circuitboard/computer/syndicate_shuttle/Initialize(mapload)
 	. = ..()
 	GLOB.syndicate_shuttle_boards += src
 
@@ -363,16 +359,6 @@
 	name = "Exosuit Control Console (Computer Board)"
 	greyscale_colors = CIRCUIT_COLOR_SCIENCE
 	build_path = /obj/machinery/computer/mecha
-
-/obj/item/circuitboard/computer/nanite_chamber_control
-	name = "Nanite Chamber Control (Computer Board)"
-	greyscale_colors = CIRCUIT_COLOR_SCIENCE
-	build_path = /obj/machinery/computer/nanite_chamber_control
-
-/obj/item/circuitboard/computer/nanite_cloud_controller
-	name = "Nanite Cloud Control (Computer Board)"
-	greyscale_colors = CIRCUIT_COLOR_SCIENCE
-	build_path = /obj/machinery/computer/nanite_cloud_controller
 
 /obj/item/circuitboard/computer/rdconsole
 	name = "R&D Console (Computer Board)"
