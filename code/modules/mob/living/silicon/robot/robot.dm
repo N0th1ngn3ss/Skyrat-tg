@@ -148,6 +148,7 @@
 	QDEL_NULL(inv1)
 	QDEL_NULL(inv2)
 	QDEL_NULL(inv3)
+	QDEL_NULL(hands)
 	QDEL_NULL(spark_system)
 	QDEL_NULL(alert_control)
 	cell = null
@@ -345,7 +346,6 @@
 	cut_overlays()
 	SSvis_overlays.remove_vis_overlay(src, managed_vis_overlays)
 	icon_state = model.cyborg_base_icon
-	icon = model.cyborg_icon_file
 	if(stat != DEAD && !(HAS_TRAIT(src, TRAIT_KNOCKEDOUT) || IsStun() || IsParalyzed() || low_power_mode)) //Not dead, not stunned.
 		if(!eye_lights)
 			eye_lights = new()
@@ -359,12 +359,6 @@
 			eye_lights.plane = GAME_PLANE
 		eye_lights.icon = icon
 		add_overlay(eye_lights)
-
-	else if(model.cyborg_stat_icons)
-		if(stat == DEAD)
-			icon_state = "[model.cyborg_base_icon]-dead"
-		else
-			icon_state = "[model.cyborg_base_icon]-unconscious"
 
 	if(opened)
 		if(wiresexposed)
@@ -701,6 +695,11 @@
 	SEND_SIGNAL(src, COMSIG_BORG_SAFE_DECONSTRUCT)
 	uneq_all()
 	shown_robot_modules = FALSE
+
+	for(var/obj/item/storage/bag in model.contents) // drop all of the items that may be stored by the cyborg
+		for(var/obj/item in bag)
+			item.forceMove(drop_location())
+
 	if(hud_used)
 		hud_used.update_robot_modules_display()
 
