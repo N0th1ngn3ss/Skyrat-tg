@@ -118,7 +118,6 @@
 	if(!handle_duplicate(objective))
 		qdel(objective)
 		return
-	log_traitor("[key_name(owner)] has received a potential objective: [objective.to_debug_string()]")
 	objective.original_progression = objective.progression_reward
 	objective.update_progression_reward()
 	potential_objectives += objective

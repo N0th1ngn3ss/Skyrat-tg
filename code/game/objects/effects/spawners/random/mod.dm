@@ -11,7 +11,6 @@
 		/obj/item/mod/module/tanner,
 		/obj/item/mod/module/balloon,
 		/obj/item/mod/module/paper_dispenser,
-		/obj/item/mod/module/hat_stabilizer,
 	)
 
 /obj/effect/spawner/random/mod/maint/Initialize(mapload)

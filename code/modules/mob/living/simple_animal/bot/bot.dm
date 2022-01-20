@@ -475,24 +475,22 @@
 		return REDUCE_RANGE
 
 /mob/living/simple_animal/bot/proc/drop_part(obj/item/drop_item, dropzone)
-	var/obj/item/item_to_drop
 	if(ispath(drop_item))
-		item_to_drop = new drop_item(dropzone)
+		new drop_item(dropzone)
 	else
-		item_to_drop = drop_item
-		item_to_drop.forceMove(dropzone)
+		drop_item.forceMove(dropzone)
 
-	if(istype(item_to_drop, /obj/item/stock_parts/cell))
-		var/obj/item/stock_parts/cell/dropped_cell = item_to_drop
+	if(istype(drop_item, /obj/item/stock_parts/cell))
+		var/obj/item/stock_parts/cell/dropped_cell = drop_item
 		dropped_cell.charge = 0
 		dropped_cell.update_appearance()
 
-	else if(istype(item_to_drop, /obj/item/storage))
-		var/obj/item/storage/storage_to_drop = item_to_drop
-		storage_to_drop.contents = list()
+	else if(istype(drop_item, /obj/item/storage))
+		var/obj/item/storage/S = drop_item
+		S.contents = list()
 
-	else if(istype(item_to_drop, /obj/item/gun/energy))
-		var/obj/item/gun/energy/dropped_gun = item_to_drop
+	else if(istype(drop_item, /obj/item/gun/energy))
+		var/obj/item/gun/energy/dropped_gun = drop_item
 		dropped_gun.cell.charge = 0
 		dropped_gun.update_appearance()
 

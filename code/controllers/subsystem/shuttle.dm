@@ -157,13 +157,13 @@ SUBSYSTEM_DEF(shuttle)
 	has_purchase_shuttle_access = init_has_purchase_shuttle_access()
 
 	if(!arrivals)
-		log_mapping("No /obj/docking_port/mobile/arrivals placed on the map!")
+		WARNING("No /obj/docking_port/mobile/arrivals placed on the map!")
 	if(!emergency)
-		log_mapping("No /obj/docking_port/mobile/emergency placed on the map!")
+		WARNING("No /obj/docking_port/mobile/emergency placed on the map!")
 	if(!backup_shuttle)
-		log_mapping("No /obj/docking_port/mobile/emergency/backup placed on the map!")
+		WARNING("No /obj/docking_port/mobile/emergency/backup placed on the map!")
 	if(!supply)
-		log_mapping("No /obj/docking_port/mobile/supply placed on the map!")
+		WARNING("No /obj/docking_port/mobile/supply placed on the map!")
 	return ..()
 
 /datum/controller/subsystem/shuttle/proc/setup_shuttles(list/stationary)
@@ -830,11 +830,11 @@ SUBSYSTEM_DEF(shuttle)
 				found++
 				if(found > 1)
 					qdel(P, force=TRUE)
-					log_mapping("Shuttle Template [S.mappath] has multiple mobile docking ports.")
+					log_world("Map warning: Shuttle Template [S.mappath] has multiple mobile docking ports.")
 				else
 					preview_shuttle = P
 			if(istype(P, /obj/docking_port/stationary))
-				log_mapping("Shuttle Template [S.mappath] has a stationary docking port.")
+				log_world("Map warning: Shuttle Template [S.mappath] has a stationary docking port.")
 	if(!found)
 		var/msg = "load_template(): Shuttle Template [S.mappath] has no mobile docking port. Aborting import."
 		for(var/T in affected)

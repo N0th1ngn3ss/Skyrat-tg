@@ -7,7 +7,7 @@
 	..(Target)
 	savedslowdown = slowdown
 
-/datum/action/chameleon_slowdown/Trigger(trigger_flags)
+/datum/action/chameleon_slowdown/Trigger()
 	var/obj/item/clothing/target_clothing = target
 	var/slow = target_clothing.slowdown
 	target_clothing.slowdown = savedslowdown

@@ -537,7 +537,7 @@
 	build_path = /obj/machinery/computer/exoscanner_control
 
 /obj/item/circuitboard/computer/exodrone_console
-	name = "Exploration Drone Control Console (Computer Board)"
+	name = "Exploration odrone control console (Computer Board)"
 	build_path = /obj/machinery/computer/exodrone_control_console
 
 /obj/item/circuitboard/computer/service_orders

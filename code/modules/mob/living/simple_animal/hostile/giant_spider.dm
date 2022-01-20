@@ -211,7 +211,7 @@
 /mob/living/simple_animal/hostile/giant_spider/tarantula/OpenFire()
 	if(client)
 		return
-	charge.Trigger(target = target)
+	charge.Trigger(target)
 
 /mob/living/simple_animal/hostile/giant_spider/tarantula/Moved(atom/oldloc, dir)
 	. = ..()
@@ -530,7 +530,7 @@
 			return FALSE
 		return TRUE
 
-/datum/action/innate/spider/comm/Trigger(trigger_flags)
+/datum/action/innate/spider/comm/Trigger()
 	var/input = tgui_input_text(owner, "Input a command for your legions to follow.", "Command")
 	if(QDELETED(src) || !input || !IsAvailable())
 		return FALSE

@@ -349,7 +349,7 @@ const HardwareSection = (props, context) => {
     chestplate,
     gauntlets,
     boots,
-    core,
+    cell,
     charge,
   } = data;
   return (
@@ -373,13 +373,13 @@ const HardwareSection = (props, context) => {
           </LabeledList.Item>
         </LabeledList>
       </Collapsible>
-      <Collapsible title="Core">
-        {core && (
+      <Collapsible title="Cell">
+        {cell && (
           <LabeledList>
-            <LabeledList.Item label="Core Type">
-              {core}
+            <LabeledList.Item label="Cell Type">
+              {cell}
             </LabeledList.Item>
-            <LabeledList.Item label="Core Charge">
+            <LabeledList.Item label="Cell Charge">
               <ProgressBar
                 value={charge / 100}
                 content={charge + '%'}
@@ -391,7 +391,7 @@ const HardwareSection = (props, context) => {
             </LabeledList.Item>
           </LabeledList>
         ) || (
-          <Box color="bad" textAlign="center">No Core Detected</Box>
+          <Box color="bad" textAlign="center">No Cell Detected</Box>
         )}
       </Collapsible>
     </Section>

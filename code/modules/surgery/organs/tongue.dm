@@ -153,7 +153,7 @@
 	QDEL_NULL(statue)
 	. = ..()
 
-/datum/action/item_action/organ_action/statue/Trigger(trigger_flags)
+/datum/action/item_action/organ_action/statue/Trigger()
 	. = ..()
 	if(!iscarbon(owner))
 		to_chat(owner, span_warning("Your body rejects the powers of the tongue!"))

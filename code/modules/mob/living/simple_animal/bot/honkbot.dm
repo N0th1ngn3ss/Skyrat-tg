@@ -72,7 +72,7 @@
 	target = null
 	oldtarget_name = null
 	set_anchored(FALSE)
-	SSmove_manager.stop_looping(src)
+	walk_to(src,0)
 	last_found = world.time
 	limiting_spam = FALSE
 
@@ -213,7 +213,7 @@
 
 		if(BOT_IDLE) // idle
 
-			SSmove_manager.stop_looping(src)
+			walk_to(src,0)
 			look_for_perp()
 			if(!mode && bot_mode_flags & BOT_MODE_AUTOPATROL)
 				mode = BOT_START_PATROL
@@ -222,7 +222,7 @@
 
 			// if can't reach perp for long enough, go idle
 			if(frustration >= 5) //gives up easier than beepsky
-				SSmove_manager.stop_looping(src)
+				walk_to(src,0)
 				back_to_idle()
 				return
 
@@ -241,7 +241,7 @@
 
 				else // not next to perp
 					var/turf/olddist = get_dist(src, target)
-					SSmove_manager.move_to(src, target, 1, 4)
+					walk_to(src, target,1,4)
 					if((get_dist(src, target)) >= (olddist))
 						frustration++
 					else
@@ -308,6 +308,8 @@
 				continue
 
 /mob/living/simple_animal/bot/honkbot/explode()
+
+	walk_to(src,0)
 	visible_message(span_boldannounce("[src] blows apart!"))
 	var/atom/Tsec = drop_location()
 	//doesn't drop cardboard nor its assembly, since its a very frail material.

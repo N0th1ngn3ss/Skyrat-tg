@@ -29,6 +29,8 @@
 				return FALSE
 			var/datum/team/brother_team/team = opt
 			src.add_antag_datum(/datum/antagonist/brother, team)
+		if(ROLE_INTERNAL_AFFAIRS)
+			src.add_antag_datum(/datum/antagonist/traitor/internal_affairs)
 		if(ROLE_FAMILIES)
 			src.add_antag_datum(/datum/antagonist/gang)
 		if(ROLE_HERETIC)

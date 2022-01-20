@@ -218,7 +218,8 @@
 	if(HAS_TRAIT(talking_movable, TRAIT_SIGN_LANG)) //Forces Sign Language users to wear the translation gloves to speak over radios
 		var/mob/living/carbon/mute = talking_movable
 		if(istype(mute))
-			if(!HAS_TRAIT(talking_movable, TRAIT_CAN_SIGN_ON_COMMS))
+			var/obj/item/clothing/gloves/radio/G = mute.get_item_by_slot(ITEM_SLOT_GLOVES)
+			if(!istype(G))
 				return FALSE
 			switch(mute.check_signables_state())
 				if(SIGN_ONE_HAND) // One hand full
@@ -281,7 +282,7 @@
 	var/datum/signal/subspace/vocal/signal = new(src, freq, speaker, language, message, spans, message_mods)
 
 	// Independent radios, on the CentCom frequency, reach all independent radios
-	if (independent && (freq == FREQ_CENTCOM || freq == FREQ_CTF_RED || freq == FREQ_CTF_BLUE || freq == FREQ_CTF_GREEN || freq == FREQ_CTF_YELLOW || freq == FREQ_FACTION || freq == FREQ_CYBERSUN || freq == FREQ_INTERDYNE || freq == FREQ_GUILD || freq == FREQ_TARKON)) //SKYRAT EDIT CHANGE - FACTION, MAPPING
+	if (independent && (freq == FREQ_CENTCOM || freq == FREQ_CTF_RED || freq == FREQ_CTF_BLUE || freq == FREQ_CTF_GREEN || freq == FREQ_CTF_YELLOW || freq == FREQ_FACTION || freq == FREQ_CYBERSUN || freq == FREQ_INTERDYNE || freq == FREQ_GUILD)) //SKYRAT EDIT CHANGE - FACTION, MAPPING
 		signal.data["compression"] = 0
 		signal.transmission_method = TRANSMISSION_SUPERSPACE
 		signal.levels = list(0)
@@ -438,13 +439,16 @@
 	else
 		. += span_notice("It cannot be modified or attached.")
 
-/obj/item/radio/screwdriver_act(mob/living/user, obj/item/tool)
+/obj/item/radio/attackby(obj/item/W, mob/user, params)
 	add_fingerprint(user)
-	unscrewed = !unscrewed
-	if(unscrewed)
-		to_chat(user, span_notice("The radio can now be attached and modified!"))
+	if(W.tool_behaviour == TOOL_SCREWDRIVER)
+		unscrewed = !unscrewed
+		if(unscrewed)
+			to_chat(user, span_notice("The radio can now be attached and modified!"))
+		else
+			to_chat(user, span_notice("The radio can no longer be modified or attached!"))
 	else
-		to_chat(user, span_notice("The radio can no longer be modified or attached!"))
+		return ..()
 
 /obj/item/radio/emp_act(severity)
 	. = ..()
@@ -504,36 +508,36 @@
 	. = ..()
 	set_frequency(FREQ_SYNDICATE)
 
-/obj/item/radio/borg/screwdriver_act(mob/living/user, obj/item/tool)
-	if(!keyslot)
-		to_chat(user, span_warning("This radio doesn't have any encryption keys!"))
-		return
+/obj/item/radio/borg/attackby(obj/item/W, mob/user, params)
 
-	for(var/ch_name in channels)
-		SSradio.remove_object(src, GLOB.radiochannels[ch_name])
-		secure_radio_connections[ch_name] = null
+	if(W.tool_behaviour == TOOL_SCREWDRIVER)
+		if(keyslot)
+			for(var/ch_name in channels)
+				SSradio.remove_object(src, GLOB.radiochannels[ch_name])
+				secure_radio_connections[ch_name] = null
 
-	if(keyslot)
-		var/turf/user_turf = get_turf(user)
-		if(user_turf)
-			keyslot.forceMove(user_turf)
-			keyslot = null
 
-	recalculateChannels()
-	to_chat(user, span_notice("You pop out the encryption key in the radio."))
-	return ..()
+			if(keyslot)
+				var/turf/T = get_turf(user)
+				if(T)
+					keyslot.forceMove(T)
+					keyslot = null
 
-/obj/item/radio/borg/attackby(obj/item/attacking_item, mob/user, params)
+			recalculateChannels()
+			to_chat(user, span_notice("You pop out the encryption key in the radio."))
 
-	if(istype(attacking_item, /obj/item/encryptionkey))
+		else
+			to_chat(user, span_warning("This radio doesn't have any encryption keys!"))
+
+	else if(istype(W, /obj/item/encryptionkey/))
 		if(keyslot)
 			to_chat(user, span_warning("The radio can't hold another key!"))
 			return
 
 		if(!keyslot)
-			if(!user.transferItemToLoc(attacking_item, src))
+			if(!user.transferItemToLoc(W, src))
 				return
-			keyslot = attacking_item
+			keyslot = W
 
 		recalculateChannels()
 

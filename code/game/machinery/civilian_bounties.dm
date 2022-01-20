@@ -1,4 +1,3 @@
-///Percentage of a civilian bounty the civilian will make.
 #define CIV_BOUNTY_SPLIT 30
 
 ///Pad for the Civilian Bounty Control.
@@ -17,9 +16,8 @@
 	icon_screen = "civ_bounty"
 	icon_keyboard = "id_key"
 	warmup_time = 3 SECONDS
-	circuit = /obj/item/circuitboard/computer/bountypad
-	///Typecast of an inserted, scanned ID card inside the console, as bounties are held within the ID card.
 	var/obj/item/card/id/inserted_scan_id
+	circuit = /obj/item/circuitboard/computer/bountypad
 
 /obj/machinery/computer/piratepad_control/civilian/attackby(obj/item/I, mob/living/user, params)
 	if(isidcard(I))

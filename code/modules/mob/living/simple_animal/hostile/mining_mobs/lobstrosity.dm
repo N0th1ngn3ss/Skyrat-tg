@@ -47,7 +47,7 @@
 /mob/living/simple_animal/hostile/asteroid/lobstrosity/OpenFire()
 	if(client)
 		return
-	charge.Trigger(target = target)
+	charge.Trigger(target)
 
 /mob/living/simple_animal/hostile/asteroid/lobstrosity/lava
 	name = "tropical lobstrosity"
