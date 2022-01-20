@@ -488,7 +488,7 @@ GLOBAL_LIST_EMPTY(antagonists)
 	. = ..()
 	name += " [target]"
 
-/datum/action/antag_info/Trigger(trigger_flags)
+/datum/action/antag_info/Trigger()
 	. = ..()
 	if(!.)
 		return

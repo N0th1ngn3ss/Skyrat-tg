@@ -1,11 +1,11 @@
-/**
- * name
- * key
- * description
- * role
- * comments
- * ready = TRUE
- */
+/*
+		name
+		key
+		description
+		role
+		comments
+		ready = 0
+*/
 
 /datum/pai_candidate/proc/savefile_path(mob/user)
 	return "data/player_saves/[user.ckey[1]]/[user.ckey]/pai.sav"
@@ -24,17 +24,17 @@
 
 // loads the savefile corresponding to the mob's ckey
 // if silent=true, report incompatible savefiles
-// returns TRUE if loaded (or file was incompatible)
-// returns FALSE if savefile did not exist
+// returns 1 if loaded (or file was incompatible)
+// returns 0 if savefile did not exist
 
 /datum/pai_candidate/proc/savefile_load(mob/user, silent = TRUE)
 	if (is_guest_key(user.key))
-		return FALSE
+		return 0
 
 	var/path = savefile_path(user)
 
 	if (!fexists(path))
-		return FALSE
+		return 0
 
 	var/savefile/F = new /savefile(path)
 
@@ -48,9 +48,9 @@
 		fdel(path)
 		if (!silent)
 			tgui_alert(user, "Your savefile was incompatible with this version and was deleted.")
-		return FALSE
+		return 0
 
 	F["name"] >> src.name
 	F["description"] >> src.description
 	F["comments"] >> src.comments
-	return TRUE
+	return 1

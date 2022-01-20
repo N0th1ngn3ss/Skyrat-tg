@@ -46,7 +46,6 @@
 
 /obj/item/weldingtool/electric/switched_off(mob/user)
 	powered = FALSE
-	welding = FALSE
 	light_on = FALSE
 	force = initial(force)
 	damtype = BRUTE

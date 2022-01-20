@@ -750,7 +750,8 @@
 		return
 	else
 		if(hud_used.healths)
-			if(..()) //not dead
+			var/health_amount = min(health, maxHealth - getStaminaLoss())
+			if(..(health_amount)) //not dead
 				switch(hal_screwyhud)
 					if(SCREWYHUD_CRIT)
 						hud_used.healths.icon_state = "health6"

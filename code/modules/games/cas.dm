@@ -73,7 +73,7 @@
 	H.buffertext = choice.name
 	H.icon_state = choice.card_icon
 	H.card_face = choice.card_icon
-	H.parentdeck = WEAKREF(src)
+	H.parentdeck = src
 	src.cards -= choice
 	H.pickup(user)
 	user.put_in_hands(H)

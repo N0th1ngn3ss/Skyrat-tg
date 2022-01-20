@@ -27,7 +27,7 @@
     name = "Light"
     desc = "Light or extinguish the holocigarette"
 
-/datum/action/item_action/toggle_lit/Trigger(trigger_flags)
+/datum/action/item_action/toggle_lit/Trigger()
 	var/obj/item/clothing/mask/holocigarette/smoked = target
 	var/mob/living/carbon/smoker = owner
 	if(smoked.lit == FALSE)

@@ -16,17 +16,14 @@
 	var/datum/callback/post_tipped_callback
 	/// Callback to additional behavior after being untipped.
 	var/datum/callback/post_untipped_callback
-	///The timer given until they untip themselves
-	var/self_untip_timer
 
 /datum/component/tippable/Initialize(
-	tip_time = 3 SECONDS,
-	untip_time = 1 SECONDS,
-	self_right_time = 60 SECONDS,
-	datum/callback/pre_tipped_callback,
-	datum/callback/post_tipped_callback,
-	datum/callback/post_untipped_callback,
-)
+		tip_time = 3 SECONDS,
+		untip_time = 1 SECONDS,
+		self_right_time = 60 SECONDS,
+		datum/callback/pre_tipped_callback,
+		datum/callback/post_tipped_callback,
+		datum/callback/post_untipped_callback)
 
 	if(!isliving(parent))
 		return COMPONENT_INCOMPATIBLE
@@ -39,10 +36,10 @@
 	src.post_untipped_callback = post_untipped_callback
 
 /datum/component/tippable/RegisterWithParent()
-	RegisterSignal(parent, COMSIG_ATOM_ATTACK_HAND_SECONDARY, .proc/interact_with_tippable)
+	RegisterSignal(parent, COMSIG_ATOM_ATTACK_HAND, .proc/interact_with_tippable)
 
 /datum/component/tippable/UnregisterFromParent()
-	UnregisterSignal(parent, COMSIG_ATOM_ATTACK_HAND_SECONDARY)
+	UnregisterSignal(parent, COMSIG_ATOM_ATTACK_HAND)
 
 /datum/component/tippable/Destroy()
 	if(pre_tipped_callback)
@@ -58,8 +55,9 @@
  *
  * source - the mob being tipped over
  * user - the mob interacting with source
+ * modifiers - list of on click modifiers (we only tip mobs over using right click!)
  */
-/datum/component/tippable/proc/interact_with_tippable(mob/living/source, mob/user)
+/datum/component/tippable/proc/interact_with_tippable(mob/living/source, mob/user, modifiers)
 	SIGNAL_HANDLER
 
 	var/mob/living/living_user = user
@@ -70,10 +68,10 @@
 
 	if(is_tipped)
 		INVOKE_ASYNC(src, .proc/try_untip, source, user)
-	else
+	else if(LAZYACCESS(modifiers, RIGHT_CLICK))
 		INVOKE_ASYNC(src, .proc/try_tip, source, user)
 
-	return COMPONENT_SECONDARY_CANCEL_ATTACK_CHAIN
+	return COMPONENT_CANCEL_ATTACK_CHAIN
 
 /*
  * Try to tip over [tipped_mob].
@@ -129,7 +127,7 @@
 	else if(self_right_time <= 0)
 		right_self(tipped_mob)
 	else
-		self_untip_timer = addtimer(CALLBACK(src, .proc/right_self, tipped_mob), self_right_time, TIMER_UNIQUE | TIMER_STOPPABLE)
+		addtimer(CALLBACK(src, .proc/right_self, tipped_mob), self_right_time)
 
 /*
  * Try to untip a mob that has been tipped.
@@ -171,8 +169,6 @@
 		ignored_mobs = untipper
 		)
 
-	if(self_untip_timer)
-		deltimer(self_untip_timer)
 	set_tipped_status(tipped_mob, FALSE)
 	post_untipped_callback?.Invoke(untipper)
 

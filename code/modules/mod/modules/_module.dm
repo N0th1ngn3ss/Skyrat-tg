@@ -1,7 +1,6 @@
 ///MOD module - A special device installed in a MODsuit allowing the suit to do new stuff.
 /obj/item/mod/module
 	name = "MOD module"
-	icon = 'icons/obj/clothing/modsuit/mod_modules.dmi'
 	icon_state = "module"
 	/// If it can be removed
 	var/removable = TRUE
@@ -12,11 +11,11 @@
 	/// How much space it takes up in the MOD
 	var/complexity = 0
 	/// Power use when idle
-	var/idle_power_cost = DEFAULT_CHARGE_DRAIN * 0
+	var/idle_power_cost = DEFAULT_CELL_DRAIN * 0
 	/// Power use when active
-	var/active_power_cost = DEFAULT_CHARGE_DRAIN * 0
+	var/active_power_cost = DEFAULT_CELL_DRAIN * 0
 	/// Power use when used, we call it manually
-	var/use_power_cost = DEFAULT_CHARGE_DRAIN * 0
+	var/use_power_cost = DEFAULT_CELL_DRAIN * 0
 	/// ID used by their TGUI
 	var/tgui_id
 	/// Linked MODsuit
@@ -37,8 +36,6 @@
 	var/used_signal
 	/// List of mobs we are pinned to, linked with their action buttons
 	var/list/pinned_to = list()
-	/// If we're allowed to use this module while phased out.
-	var/allowed_in_phaseout = FALSE
 	/// Timer for the cooldown
 	COOLDOWN_DECLARE(cooldown_timer)
 
@@ -106,14 +103,8 @@
 	if(!COOLDOWN_FINISHED(src, cooldown_timer))
 		balloon_alert(mod.wearer, "on cooldown!")
 		return FALSE
-	if(!mod.active || mod.activating || !mod.get_charge())
+	if(!mod.active || mod.activating || !mod.cell?.charge)
 		balloon_alert(mod.wearer, "unpowered!")
-		return FALSE
-	if(!allowed_in_phaseout && istype(mod.wearer.loc, /obj/effect/dummy/phased_mob))
-		//specifically a to_chat because the user is phased out.
-		to_chat(mod.wearer, span_warning("You cannot activate this right now."))
-		return FALSE
-	if(SEND_SIGNAL(src, COMSIG_MODULE_TRIGGERED) & MOD_ABORT_USE)
 		return FALSE
 	if(module_type == MODULE_ACTIVE)
 		if(mod.selected_module && !mod.selected_module.on_deactivation())
@@ -133,7 +124,6 @@
 	active = TRUE
 	COOLDOWN_START(src, cooldown_timer, cooldown_time)
 	mod.wearer.update_inv_back()
-	SEND_SIGNAL(src, COMSIG_MODULE_ACTIVATED)
 	return TRUE
 
 /// Called when the module is deactivated
@@ -150,7 +140,6 @@
 			UnregisterSignal(mod.wearer, used_signal)
 			used_signal = null
 	mod.wearer.update_inv_back()
-	SEND_SIGNAL(src, COMSIG_MODULE_DEACTIVATED)
 	return TRUE
 
 /// Called when the module is used
@@ -160,22 +149,13 @@
 		return FALSE
 	if(!check_power(use_power_cost))
 		return FALSE
-	if(!allowed_in_phaseout && istype(mod.wearer.loc, /obj/effect/dummy/phased_mob))
-		//specifically a to_chat because the user is phased out.
-		to_chat(mod.wearer, span_warning("You cannot activate this right now."))
-		return FALSE
-	if(SEND_SIGNAL(src, COMSIG_MODULE_TRIGGERED) & MOD_ABORT_USE)
-		return FALSE
 	COOLDOWN_START(src, cooldown_timer, cooldown_time)
 	addtimer(CALLBACK(mod.wearer, /mob.proc/update_inv_back), cooldown_time)
 	mod.wearer.update_inv_back()
-	SEND_SIGNAL(src, COMSIG_MODULE_USED)
 	return TRUE
 
 /// Called when an activated module without a device is used
 /obj/item/mod/module/proc/on_select_use(atom/target)
-	if(mod.wearer.incapacitated(ignore_grab = TRUE))
-		return FALSE
 	mod.wearer.face_atom(target)
 	if(!on_use())
 		return FALSE
@@ -202,16 +182,15 @@
 /obj/item/mod/module/proc/on_active_process(delta_time)
 	return
 
-/// Drains power from the suit charge
+/// Drains power from the suit cell
 /obj/item/mod/module/proc/drain_power(amount)
 	if(!check_power(amount))
 		return FALSE
-	mod.subtract_charge(amount)
+	mod.cell.charge = max(0, mod.cell.charge - amount)
 	return TRUE
 
-/// Checks if there is enough power in the suit
 /obj/item/mod/module/proc/check_power(amount)
-	if(mod.get_charge() < amount)
+	if(!mod.cell || (mod.cell.charge < amount))
 		return FALSE
 	return TRUE
 
@@ -267,7 +246,7 @@
 	else
 		return
 	/* SKYRAT EDIT START - Making MODsuits mutant-compatible - ORIGINAL:
-	var/mutable_appearance/module_icon = mutable_appearance('icons/mob/clothing/mod.dmi', used_overlay, layer = standing.layer + 0.1)
+	var/mutable_appearance/module_icon = mutable_appearance('icons/mob/mod.dmi', used_overlay, layer = standing.layer + 0.1)
 	. += module_icon
 	*/
 	return handle_module_icon(standing, used_overlay)

@@ -104,14 +104,14 @@
 		move_to_delay = initial(move_to_delay)
 
 	if(prob(20+anger_modifier)) //Major attack
-		spiral_shots.Trigger(target = target)
+		spiral_shots.Trigger(target)
 	else if(prob(20))
-		random_shots.Trigger(target = target)
+		random_shots.Trigger(target)
 	else
 		if(prob(70))
-			shotgun_blast.Trigger(target = target)
+			shotgun_blast.Trigger(target)
 		else
-			dir_shots.Trigger(target = target)
+			dir_shots.Trigger(target)
 
 /mob/living/simple_animal/hostile/megafauna/colossus/proc/telegraph()
 	for(var/mob/M in range(10,src))

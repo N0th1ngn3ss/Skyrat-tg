@@ -229,7 +229,7 @@
 
 /obj/structure/fluff/clockwork
 	name = "Clockwork Fluff"
-	icon = 'icons/obj/fluff.dmi'
+	icon = 'icons/obj/clockwork_objects.dmi'
 	deconstructible = FALSE
 
 /obj/structure/fluff/clockwork/alloy_shards

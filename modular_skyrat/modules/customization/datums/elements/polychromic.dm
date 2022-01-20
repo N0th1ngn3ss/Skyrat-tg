@@ -33,7 +33,7 @@
 /datum/action/item_action/polychromic_change
 	name = "Change Colours"
 
-/datum/action/item_action/polychromic_change/Trigger(trigger_flags)
+/datum/action/item_action/polychromic_change/Trigger()
 	var/obj/item/item_target = target
 	if(!length(item_target.color)) //Something happened to our color and its no longer a matrix, uh oh
 		return ..()
