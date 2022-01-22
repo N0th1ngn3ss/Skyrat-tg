@@ -832,7 +832,6 @@
 	icon = 'icons/obj/toy.dmi'
 	deckstyle = "nanotrasen"
 	icon_state = "deck_nanotrasen_full"
-	worn_icon_state = "card"
 	w_class = WEIGHT_CLASS_SMALL
 	///Deck shuffling cooldown.
 	COOLDOWN_DECLARE(shuffle_cooldown)
@@ -916,7 +915,6 @@
 	desc = "A number of cards not in a deck, customarily held in ones hand."
 	icon = 'icons/obj/toy.dmi'
 	icon_state = "none"
-	worn_icon_state = "card"
 	w_class = WEIGHT_CLASS_TINY
 	///Cards in this hand of cards.
 	var/list/cards = list()
@@ -1022,7 +1020,6 @@
 	desc = "A playing card used to play card games like poker."
 	icon = 'icons/obj/toy.dmi'
 	icon_state = "singlecard_down_nanotrasen"
-	worn_icon_state = "card"
 	w_class = WEIGHT_CLASS_TINY
 	pixel_x = -5
 	///The name of the card
